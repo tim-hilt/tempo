@@ -3,6 +3,7 @@ package rest
 import (
 	"fmt"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/go-resty/resty/v2"
@@ -90,16 +91,22 @@ func (a *Api) findWorklogIdsOn(day string) *[]searchWorklogsResult {
 
 func (a *Api) DeleteWorklogs(day string) {
 	worklogs := a.findWorklogIdsOn(day)
+	var wg sync.WaitGroup
 
 	for _, worklog := range *worklogs {
-		worklogId := fmt.Sprint(worklog.TempoWorklogId)
-		log.Info().Msg("Started deleting worklog for ticket " + worklog.Issue.Ticket + " with description: " + worklog.Issue.Description)
+		wg.Add(1)
+		go func(worklog searchWorklogsResult) {
+			defer wg.Done()
+			worklogId := fmt.Sprint(worklog.TempoWorklogId)
+			log.Info().Msg("Started deleting worklog for ticket " + worklog.Issue.Ticket + " with description: " + worklog.Issue.Description)
 
-		resp, err := a.client.R().Delete(paths.DeleteWorklogPath(worklogId))
-		util.HandleResponse(resp.StatusCode(), err, "error while deleting worklog with id "+worklogId)
+			resp, err := a.client.R().Delete(paths.DeleteWorklogPath(worklogId))
+			util.HandleResponse(resp.StatusCode(), err, "error while deleting worklog with id "+worklogId)
 
-		log.Info().Msg("Finished deleting worklog for ticket " + worklog.Issue.Ticket)
+			log.Info().Msg("Finished deleting worklog for ticket " + worklog.Issue.Ticket)
+		}(worklog)
 	}
+	wg.Wait()
 }
 
 type worklog struct {
