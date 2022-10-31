@@ -17,4 +17,5 @@ var (
 
 	User     string
 	Password string
+	Path     string
 )

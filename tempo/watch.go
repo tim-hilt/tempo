@@ -1,7 +1,7 @@
 package tempo
 
 // TODO: Fill with life
-func WatchNotes() {
+func (t *Tempo) WatchNotes() {
 	// 1. Watch note-dir
 	// 2. On Create/Change...
 	// 2.1. Wait 5 minutes

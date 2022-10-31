@@ -4,31 +4,26 @@ Copyright © 2022 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
+	"github.com/tim-hilt/tempo/cmd/flags"
+	"github.com/tim-hilt/tempo/tempo"
 )
 
 // watchCmd represents the watch command
 var watchCmd = &cobra.Command{
 	Use:   "watch",
-	Short: "Not implemented yet",
-	Long:  "Not implemented yet",
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("This command isn't implemented yet.")
-	},
+	Short: "watch a given directory and submit changes",
+	Long:  "watch a given directory and submit changes",
+	Run:   watch,
+}
+
+func watch(cmd *cobra.Command, args []string) {
+	tempoClient := tempo.New(flags.User, flags.Password)
+	tempoClient.WatchNotes()
 }
 
 func init() {
 	rootCmd.AddCommand(watchCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// watchCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// watchCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	rootCmd.PersistentFlags().StringVarP(&flags.Path, "path", "p", ".", "The path that should be watched")
 }

@@ -34,4 +34,7 @@ func init() {
 	rootCmd.PersistentFlags().IntVarP(&flags.Loglevel, "loglevel", "l", 1, "Logging-level, -1 (trace) to 5 (panic)")
 	rootCmd.PersistentFlags().StringVarP(&flags.User, "user", "u", "", "The Jira-User")
 	rootCmd.PersistentFlags().StringVarP(&flags.Password, "password", "p", "", "The Password for the Jira-User")
+
+	rootCmd.MarkPersistentFlagRequired("user")
+	rootCmd.MarkPersistentFlagRequired("password")
 }
