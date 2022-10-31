@@ -1,4 +1,4 @@
-package endpoints
+package paths
 
 const (
 	prefix         = "https://jira.in-technology.de:443/rest/" // TODO: This should be configurable

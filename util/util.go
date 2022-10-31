@@ -27,13 +27,16 @@ func HandleErr(err error, msg string) {
 	}
 }
 
-func HandleErronousHttpStatus(status int) {
+func handleErronousHttpStatus(status int) {
 	if status < 200 || status > 299 {
 		log.Fatal().Msg("http-status was " + fmt.Sprint(status) + " instead of 200")
 	}
 }
 
-// TODO: Make function that handles error and http-status
+func HandleResponse(status int, err error, msg string) {
+	HandleErr(err, msg)
+	handleErronousHttpStatus(status)
+}
 
 func Divmod(numerator, denominator int) (quotient, remainder int) {
 	quotient = numerator / denominator // integer division, decimals are truncated

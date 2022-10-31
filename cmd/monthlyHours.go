@@ -17,6 +17,6 @@ var monthlyHoursCmd = &cobra.Command{
 	Long:  "Get number of monthly hours",
 	Run: func(cmd *cobra.Command, args []string) {
 		tempoClient := tempo.New(flags.User, flags.Password)
-		tempoClient.GetMonthlyHours() // TODO: Somehow the number seems too high! Maybe I have to look into the output again.
+		tempoClient.GetMonthlyHours()
 	},
 }

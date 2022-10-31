@@ -8,7 +8,7 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"github.com/tim-hilt/tempo/rest/endpoints"
+	"github.com/tim-hilt/tempo/rest/paths"
 	"github.com/tim-hilt/tempo/util"
 	"github.com/tim-hilt/tempo/util/logging"
 )
@@ -42,10 +42,9 @@ func (b *Api) initUser() {
 
 	resp, err := b.client.R().
 		SetResult(userIdResponse{}).
-		Get(endpoints.UserIdPath())
+		Get(paths.UserIdPath())
 
-	util.HandleErr(err, "error when getting myself")
-	util.HandleErronousHttpStatus(resp.StatusCode())
+	util.HandleResponse(resp.StatusCode(), err, "error when getting myself")
 
 	userId := resp.Result().(*userIdResponse).UserId
 	log.Info().Msg("Finished getting userId: " + userId)
@@ -73,18 +72,19 @@ type searchWorklogsResult struct {
 	DurationSeconds int    `json:"timeSpentSeconds"`
 }
 
-func (a *Api) FindWorklogsInRange(from string, to string) *[]searchWorklogsResult {
+func (a *Api) FindWorklogsInRange(from string, to string) (worklogs *[]searchWorklogsResult) {
 	log.Info().Msg("Started searching for worklogs in range " + from + " - " + to)
 	resp, err := a.client.R().
 		SetBody(searchWorklogBody{From: from, To: to, Users: []string{a.UserId}}).
 		SetResult([]searchWorklogsResult{}).
-		Post(endpoints.FindWorklogsPath())
+		Post(paths.FindWorklogsPath())
 
-	util.HandleErr(err, "error while searching for worklogs in range "+from+" - "+to)
-	util.HandleErronousHttpStatus(resp.StatusCode())
+	util.HandleResponse(resp.StatusCode(), err, "error while searching for worklogs in range "+from+" - "+to)
+
 	log.Info().Msg("Finished searching for worklogs in range " + from + " - " + to)
-	worklogs := resp.Result().(*[]searchWorklogsResult)
-	return worklogs
+
+	worklogs = resp.Result().(*[]searchWorklogsResult)
+	return
 }
 
 func (a *Api) findWorklogIdsOn(day string) *[]searchWorklogsResult {
@@ -99,10 +99,9 @@ func (a *Api) DeleteWorklogs(day string) {
 		worklogId := fmt.Sprint(worklog.TempoWorklogId)
 		log.Info().Msg("Started deleting worklog for ticket " + worklog.Ticket + " with description: " + worklog.Description)
 
-		resp, err := a.client.R().Delete(endpoints.DeleteWorklogPath(worklogId))
+		resp, err := a.client.R().Delete(paths.DeleteWorklogPath(worklogId))
+		util.HandleResponse(resp.StatusCode(), err, "error while deleting worklog with id "+worklogId)
 
-		util.HandleErr(err, "error while deleting worklog with id "+worklogId)
-		util.HandleErronousHttpStatus(resp.StatusCode())
 		log.Info().Msg("Finished deleting worklog for ticket " + worklog.Ticket)
 	}
 }
@@ -112,10 +111,9 @@ func (a *Api) CreateWorklog(ticket string, comment string, seconds int, day stri
 
 	resp, err := a.client.R().
 		SetBody(worklog{Ticket: ticket, Comment: comment, Seconds: seconds, Day: day, UserId: a.UserId}).
-		Post(endpoints.CreateWorklogPath())
+		Post(paths.CreateWorklogPath())
 
-	util.HandleErr(err, "error when creating worklog")
-	util.HandleErronousHttpStatus(resp.StatusCode())
+	util.HandleResponse(resp.StatusCode(), err, "error when creating worklog")
 
 	log.Info().Msg("Finished creating worklog for " + ticket)
 }
