@@ -9,15 +9,7 @@
       "type": "go",
       "request": "launch",
       "mode": "auto",
-      "program": "${workspaceFolder}/main.go",
-      "args": [
-        "get",
-        "monthly-hours",
-        "--password",
-        "Multipla1!",
-        "--user",
-        "thilt"
-      ]
+      "program": "${workspaceFolder}/main.go"
     }
   ]
 }
