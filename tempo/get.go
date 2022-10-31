@@ -21,3 +21,12 @@ func (t *Tempo) GetMonthlyHours() {
 	hours, minutes := util.Divmod(bookedTimeSeconds/util.SECONDS_IN_MINUTE, util.MINUTES_IN_HOUR)
 	fmt.Println("worked " + fmt.Sprint(hours) + " hours and " + fmt.Sprint(minutes) + " minutes in current month")
 }
+
+func (t *Tempo) GetTicketsForDay(day string) {
+	worklogs := t.Api.FindWorklogsInRange(day, day)
+	for _, worklog := range *worklogs {
+		hours, minutes := util.Divmod(worklog.DurationSeconds/util.SECONDS_IN_MINUTE, util.MINUTES_IN_HOUR)
+		// TODO: Next line as table with bubbletea
+		fmt.Println("Ticket: " + worklog.Issue.Ticket + " Description: " + worklog.Issue.Description + " Duration: " + fmt.Sprint(hours) + "h" + fmt.Sprint(minutes) + "m")
+	}
+}

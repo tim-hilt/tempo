@@ -51,25 +51,21 @@ func (b *Api) initUser() {
 	b.UserId = userId
 }
 
-type worklog struct {
-	Ticket  string `json:"originTaskId"`
-	Comment string `json:"comment"`
-	Seconds int    `json:"timeSpentSeconds"`
-	Day     string `json:"started"`
-	UserId  string `json:"worker"`
-}
-
 type searchWorklogBody struct {
 	From  string   `json:"from"`
 	To    string   `json:"to"`
 	Users []string `json:"worker"`
 }
 
+type issue struct {
+	Ticket      string `json:"key"`
+	Description string `json:"summary"`
+}
+
 type searchWorklogsResult struct {
-	TempoWorklogId  int    `json:"tempoWorklogId"`
-	Ticket          string `json:"issue.key"`
-	Description     string `json:"issue.summary"`
-	DurationSeconds int    `json:"timeSpentSeconds"`
+	TempoWorklogId  int   `json:"tempoWorklogId"`
+	DurationSeconds int   `json:"timeSpentSeconds"`
+	Issue           issue `json:"issue"`
 }
 
 func (a *Api) FindWorklogsInRange(from string, to string) (worklogs *[]searchWorklogsResult) {
@@ -97,13 +93,21 @@ func (a *Api) DeleteWorklogs(day string) {
 
 	for _, worklog := range *worklogs {
 		worklogId := fmt.Sprint(worklog.TempoWorklogId)
-		log.Info().Msg("Started deleting worklog for ticket " + worklog.Ticket + " with description: " + worklog.Description)
+		log.Info().Msg("Started deleting worklog for ticket " + worklog.Issue.Ticket + " with description: " + worklog.Issue.Description)
 
 		resp, err := a.client.R().Delete(paths.DeleteWorklogPath(worklogId))
 		util.HandleResponse(resp.StatusCode(), err, "error while deleting worklog with id "+worklogId)
 
-		log.Info().Msg("Finished deleting worklog for ticket " + worklog.Ticket)
+		log.Info().Msg("Finished deleting worklog for ticket " + worklog.Issue.Ticket)
 	}
+}
+
+type worklog struct {
+	Ticket  string `json:"originTaskId"`
+	Comment string `json:"comment"`
+	Seconds int    `json:"timeSpentSeconds"`
+	Day     string `json:"started"`
+	UserId  string `json:"worker"`
 }
 
 func (a *Api) CreateWorklog(ticket string, comment string, seconds int, day string) {
