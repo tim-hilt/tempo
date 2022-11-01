@@ -33,9 +33,21 @@ func (t *Tempo) GetTicketsForDay(day string) {
 	}
 
 	columns := []table.Column{
-		{Title: "Ticket", Width: 4},
-		{Title: "Description", Width: 4},
-		{Title: "Duration", Width: 4},
+		// TODO: Make this work + more beautiful!
+		{Title: "Ticket", Width: util.Max(getMaxChars(rows, 0), len("Ticket"))},
+		{Title: "Description", Width: util.Max(getMaxChars(rows, 1), len("Description"))},
+		{Title: "Duration", Width: util.Max(getMaxChars(rows, 2), len("Duration"))},
 	}
 	tablecomponent.Table(columns, rows)
+}
+
+// TODO: Make table.Row => string
+func getMaxChars(rows []table.Row, index int) int {
+	max := 0
+	for _, entry := range rows {
+		if len(entry[index]) > max {
+			max = len(entry[index])
+		}
+	}
+	return max
 }

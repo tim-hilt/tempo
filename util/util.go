@@ -43,3 +43,10 @@ func Divmod(numerator, denominator int) (quotient, remainder int) {
 	remainder = numerator % denominator
 	return
 }
+
+func Max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
+}
