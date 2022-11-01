@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/charmbracelet/bubbles/table"
+	"github.com/tim-hilt/tempo/cli/tablecomponent"
 	"github.com/tim-hilt/tempo/util"
 )
 
@@ -24,9 +26,16 @@ func (t *Tempo) GetMonthlyHours() {
 
 func (t *Tempo) GetTicketsForDay(day string) {
 	worklogs := t.Api.FindWorklogsInRange(day, day)
+	rows := []table.Row{}
 	for _, worklog := range *worklogs {
 		hours, minutes := util.Divmod(worklog.DurationSeconds/util.SECONDS_IN_MINUTE, util.MINUTES_IN_HOUR)
-		// TODO: Next line as table with bubbletea
-		fmt.Println("Ticket: " + worklog.Issue.Ticket + " Description: " + worklog.Issue.Description + " Duration: " + fmt.Sprint(hours) + "h" + fmt.Sprint(minutes) + "m")
+		rows = append(rows, table.Row{worklog.Issue.Ticket, worklog.Issue.Description, fmt.Sprint(hours) + "h" + fmt.Sprint(minutes) + "m"})
 	}
+
+	columns := []table.Column{
+		{Title: "Ticket", Width: 4},
+		{Title: "Description", Width: 4},
+		{Title: "Duration", Width: 4},
+	}
+	tablecomponent.Table(columns, rows)
 }
