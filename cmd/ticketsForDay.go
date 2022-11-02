@@ -12,12 +12,11 @@ import (
 
 // ticketsForDayCmd represents the ticketsForDay command
 var ticketsForDayCmd = &cobra.Command{
-	Use:       "tickets-for-day [date]",
-	Short:     "Print all tickets for given day to the console",
-	Long:      "Print all tickets for given day to the console",
-	Run:       ticketsForDay,
-	Args:      cobra.MatchAll(cobra.ExactArgs(1), cobra.OnlyValidArgs),
-	ValidArgs: []string{"date"},
+	Use:   "tickets-for-day [date]",
+	Short: "Print all tickets for given day to the console",
+	Long:  "Print all tickets for given day to the console",
+	Run:   ticketsForDay,
+	Args:  cobra.ExactArgs(1),
 }
 
 func ticketsForDay(cmd *cobra.Command, args []string) {

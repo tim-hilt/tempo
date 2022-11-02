@@ -9,12 +9,11 @@ import (
 
 // submitCmd represents the submit command
 var submitCmd = &cobra.Command{
-	Use:       "submit [date]",
-	Short:     "Submit a daily note to Tempo",
-	Long:      `Submit a daily note to Tempo`,
-	Run:       submit,
-	Args:      cobra.MatchAll(cobra.ExactArgs(1), cobra.OnlyValidArgs),
-	ValidArgs: []string{"date"},
+	Use:   "submit [date]",
+	Short: "Submit a daily note to Tempo",
+	Long:  `Submit a daily note to Tempo`,
+	Run:   submit,
+	Args:  cobra.ExactArgs(1),
 }
 
 func init() {

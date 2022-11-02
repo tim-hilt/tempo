@@ -15,7 +15,7 @@ var monthlyHoursCmd = &cobra.Command{
 	Use:   "monthly-hours",
 	Short: "Get number of monthly hours",
 	Long:  "Get number of monthly hours",
-	Args:  cobra.ExactArgs(0),
+	Args:  cobra.NoArgs,
 	Run:   monthlyHours,
 }
 

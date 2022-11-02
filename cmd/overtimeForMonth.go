@@ -12,12 +12,11 @@ import (
 
 // overtimeForMonthCmd represents the overtimeForMonth command
 var overtimeForMonthCmd = &cobra.Command{
-	Use:       "overtime-for-month [month]",
-	Short:     "Get overtime for a given month",
-	Long:      "Get overtime for a given month",
-	Run:       overtimeForMonth,
-	Args:      cobra.MatchAll(cobra.MaximumNArgs(1), cobra.OnlyValidArgs),
-	ValidArgs: []string{"month"},
+	Use:   "overtime-for-month [month]",
+	Short: "Get overtime for a given month",
+	Long:  "Get overtime for a given month",
+	Run:   overtimeForMonth,
+	Args:  cobra.MaximumNArgs(1),
 }
 
 func overtimeForMonth(cmd *cobra.Command, args []string) {
