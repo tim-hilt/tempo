@@ -64,9 +64,10 @@ type issue struct {
 }
 
 type searchWorklogsResult struct {
-	TempoWorklogId  int   `json:"tempoWorklogId"`
-	DurationSeconds int   `json:"timeSpentSeconds"`
-	Issue           issue `json:"issue"`
+	TempoWorklogId  int    `json:"tempoWorklogId"`
+	DurationSeconds int    `json:"timeSpentSeconds"`
+	Issue           issue  `json:"issue"`
+	Date            string `json:"started"`
 }
 
 func (a *Api) FindWorklogsInRange(from string, to string) (worklogs *[]searchWorklogsResult) {

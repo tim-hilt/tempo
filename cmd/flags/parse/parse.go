@@ -46,8 +46,7 @@ func ParseMonthArg(args []string) string {
 	var month string
 	if len(args) == 0 {
 		month = time.Now().Format(util.MONTH_FORMAT)
-	}
-	if len(args) == 1 {
+	} else if len(args) == 1 {
 		month = args[0]
 	} else {
 		log.Fatal().Msg("enter one or zero arguments for month")
