@@ -6,7 +6,6 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/tim-hilt/tempo/cmd/flags"
 	"github.com/tim-hilt/tempo/util/logging"
 )
 
@@ -29,7 +28,7 @@ func Execute() {
 }
 
 func init() {
-	cobra.OnInitialize(initConfig)
+	cobra.OnInitialize(initConfig, logging.SetLoglevel)
 
 	rootCmd.PersistentFlags().IntP("loglevel", "l", 0, "Logging-level, -1 (trace) to 5 (panic)")
 	rootCmd.PersistentFlags().StringP("jirauser", "u", "", "The Jira-User")
@@ -57,7 +56,4 @@ func initConfig() {
 
 	err = viper.ReadInConfig()
 	cobra.CheckErr(err)
-
-	flags.SetFlagvars()
-	logging.SetLoglevel()
 }

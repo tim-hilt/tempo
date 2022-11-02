@@ -6,8 +6,7 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/tim-hilt/tempo/cmd/flags"
-	"github.com/tim-hilt/tempo/cmd/flags/parse"
+	"github.com/tim-hilt/tempo/cmd/parse"
 	"github.com/tim-hilt/tempo/tempo"
 )
 
@@ -23,14 +22,14 @@ var overtimeForMonthCmd = &cobra.Command{
 func overtimeForMonth(cmd *cobra.Command, args []string) {
 	month := parse.ParseMonthArg(args)
 
-	tempoClient := tempo.New(flags.JiraUser, flags.Password)
+	tempoClient := tempo.New(viper.GetString("jiraUser"), viper.GetString("password"))
 	tempoClient.GetMonthlyOvertime(month)
 }
 
 func init() {
 	getCmd.AddCommand(overtimeForMonthCmd)
 
-	rootCmd.PersistentFlags().IntVarP(&flags.DailyWorkhours, "workhours", "w", 8, "Number of daily working-hours")
+	rootCmd.PersistentFlags().IntP("workhours", "w", 8, "Number of daily working-hours")
 	viper.BindPFlag("dailyWorkhours", rootCmd.PersistentFlags().Lookup("workhours"))
 	viper.SetDefault("dailyWorkhours", 8)
 }

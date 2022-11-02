@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/tim-hilt/tempo/cmd/flags"
+	"github.com/spf13/viper"
 	"github.com/tim-hilt/tempo/util"
 )
 
@@ -18,7 +18,7 @@ type DailyNoteEntry struct {
 
 func getDailyNote(day string) []string {
 	fileName := day + ".md"
-	fileWithPath := filepath.Join(flags.NotesDir, fileName)
+	fileWithPath := filepath.Join(viper.GetString("notesDir"), fileName)
 	if strings.HasPrefix(fileWithPath, "~") {
 		home, err := os.UserHomeDir()
 		util.HandleErr(err, "error when searching for users homedir")

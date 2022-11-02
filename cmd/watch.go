@@ -5,7 +5,7 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/tim-hilt/tempo/cmd/flags"
+	"github.com/spf13/viper"
 	"github.com/tim-hilt/tempo/tempo"
 )
 
@@ -19,7 +19,7 @@ var watchCmd = &cobra.Command{
 }
 
 func watch(cmd *cobra.Command, args []string) {
-	tempoClient := tempo.New(flags.JiraUser, flags.Password)
+	tempoClient := tempo.New(viper.GetString("jiraUser"), viper.GetString("password"))
 	tempoClient.WatchNotes()
 }
 

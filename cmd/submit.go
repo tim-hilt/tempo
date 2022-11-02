@@ -2,8 +2,8 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/tim-hilt/tempo/cmd/flags"
-	"github.com/tim-hilt/tempo/cmd/flags/parse"
+	"github.com/spf13/viper"
+	"github.com/tim-hilt/tempo/cmd/parse"
 	"github.com/tim-hilt/tempo/tempo"
 )
 
@@ -23,6 +23,6 @@ func init() {
 func submit(cmd *cobra.Command, args []string) {
 	day := parse.ParseDateArg(args)
 
-	tempoClient := tempo.New(flags.JiraUser, flags.Password)
+	tempoClient := tempo.New(viper.GetString("jiraUser"), viper.GetString("password"))
 	tempoClient.SubmitDay(day)
 }

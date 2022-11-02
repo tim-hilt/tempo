@@ -6,7 +6,7 @@ import (
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"github.com/tim-hilt/tempo/cmd/flags"
+	"github.com/spf13/viper"
 )
 
 var Logger zerolog.Logger = log.Logger
@@ -14,20 +14,22 @@ var Logger zerolog.Logger = log.Logger
 func init() {
 	Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339})
 }
+
 func SetLoglevel() {
-	if flags.Loglevel == -1 {
+	loglevel := viper.GetInt("loglevel")
+	if loglevel == -1 {
 		zerolog.SetGlobalLevel(zerolog.TraceLevel)
-	} else if flags.Loglevel == 0 {
+	} else if loglevel == 0 {
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
-	} else if flags.Loglevel == 1 {
+	} else if loglevel == 1 {
 		zerolog.SetGlobalLevel(zerolog.InfoLevel)
-	} else if flags.Loglevel == 2 {
+	} else if loglevel == 2 {
 		zerolog.SetGlobalLevel(zerolog.WarnLevel)
-	} else if flags.Loglevel == 3 {
+	} else if loglevel == 3 {
 		zerolog.SetGlobalLevel(zerolog.ErrorLevel)
-	} else if flags.Loglevel == 4 {
+	} else if loglevel == 4 {
 		zerolog.SetGlobalLevel(zerolog.FatalLevel)
-	} else if flags.Loglevel == 5 {
+	} else if loglevel == 5 {
 		zerolog.SetGlobalLevel(zerolog.PanicLevel)
 	} else {
 		log.Fatal().Msg("loglevel has to be between -1 and 5")
