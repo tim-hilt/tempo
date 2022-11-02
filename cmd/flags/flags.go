@@ -13,9 +13,10 @@ func init() {
 }
 
 var (
-	Loglevel int
-	User     string
-	Password string
-	NotesDir string
-	Config   string
+	Loglevel       int
+	DailyWorkhours int
+	User           string
+	Password       string
+	NotesDir       string
+	Config         string
 )

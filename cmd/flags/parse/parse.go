@@ -13,17 +13,17 @@ func parseDateArg(dateArg string) string {
 	if strings.HasSuffix(dateArg, ".md") {
 		pathPieces := strings.Split(dateArg, "/")
 		filePieces := strings.Split(pathPieces[len(pathPieces)-1], ".")
-		matchDate(filePieces[0])
+		validateDate(filePieces[0])
 		return filePieces[0]
 	} else if dateArg == "today" {
 		return time.Now().Format(util.DATE_FORMAT)
 	} else {
-		matchDate(dateArg)
+		validateDate(dateArg)
 		return dateArg
 	}
 }
 
-func matchDate(date string) {
+func validateDate(date string) {
 	if match, _ := regexp.MatchString(`\d{4}-\d{2}-\d{2}`, date); !match {
 		log.Fatal().Msg("date isn't correctly formatted: " + date)
 	}
@@ -40,4 +40,26 @@ func ParseArgs(args []string) string {
 	day := parseDateArg(dateArg)
 
 	return day
+}
+
+func ParseMonthArg(args []string) string {
+	var month string
+	if len(args) == 0 {
+		month = time.Now().Format(util.MONTH_FORMAT)
+	}
+	if len(args) == 1 {
+		month = args[0]
+	} else {
+		log.Fatal().Msg("enter one or zero arguments for month")
+	}
+
+	validateMonth(month)
+
+	return month
+}
+
+func validateMonth(date string) {
+	if match, _ := regexp.MatchString(`\d{4}-\d{2}`, date); !match {
+		log.Fatal().Msg("date isn't correctly formatted: " + date)
+	}
 }
