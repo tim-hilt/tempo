@@ -34,15 +34,19 @@ func init() {
 
 	cobra.OnInitialize(func() { initConfig(defaultConfig) })
 
-	rootCmd.PersistentFlags().StringVar(&flags.Config, "config", defaultConfig, "config file (default is $HOME/.config/tempo/tempo.yaml)")
+	rootCmd.PersistentFlags().StringVar(&flags.Config, "config", defaultConfig, "config file")
+	// TODO: Default value is not taken into account
 	rootCmd.PersistentFlags().IntVarP(&flags.Loglevel, "loglevel", "l", 3, "Logging-level, -1 (trace) to 5 (panic)")
 	rootCmd.PersistentFlags().StringVarP(&flags.User, "user", "u", "", "The Jira-User")
 	rootCmd.PersistentFlags().StringVarP(&flags.Password, "password", "p", "", "The Password for the Jira-User")
 	rootCmd.PersistentFlags().StringVarP(&flags.NotesDir, "notesdir", "n", ".", "The directory of the daily notes")
 
-	rootCmd.MarkFlagsRequiredTogether("user", "password")
+	// TODO: Get this to work
+	viper.BindPFlag("loglevel", rootCmd.PersistentFlags().Lookup("loglevel"))
+	viper.BindPFlag("user", rootCmd.PersistentFlags().Lookup("user"))
+	viper.BindPFlag("password", rootCmd.PersistentFlags().Lookup("password"))
 
-	// TODO: Add config-stuff here
+	viper.SetDefault("loglevel", 3)
 }
 
 func initConfig(defaultConfig string) {
