@@ -17,5 +17,5 @@ var (
 
 	User     string
 	Password string
-	Path     string
+	NotesDir string
 )

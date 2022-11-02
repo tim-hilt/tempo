@@ -24,6 +24,4 @@ func watch(cmd *cobra.Command, args []string) {
 
 func init() {
 	rootCmd.AddCommand(watchCmd)
-
-	rootCmd.PersistentFlags().StringVar(&flags.Path, "path", ".", "The path that should be watched")
 }

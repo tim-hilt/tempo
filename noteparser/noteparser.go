@@ -2,9 +2,11 @@ package noteparser
 
 import (
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 
+	"github.com/tim-hilt/tempo/cmd/flags"
 	"github.com/tim-hilt/tempo/util"
 )
 
@@ -15,9 +17,10 @@ type DailyNoteEntry struct {
 }
 
 func getDailyNote(day string) []string {
-	noteName := "/home/tim/notes/daily/" + day + ".md"
-	file, err := os.ReadFile(noteName)
-	util.HandleErr(err, "error when reading daily note "+noteName)
+	fileName := day + ".md"
+	fileWithPath := filepath.Join(flags.NotesDir, fileName)
+	file, err := os.ReadFile(fileWithPath)
+	util.HandleErr(err, "error when reading daily note "+fileWithPath)
 
 	fileLines := strings.Split(string(file), "\n")
 	return fileLines
