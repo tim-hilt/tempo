@@ -38,6 +38,7 @@ func (t *Tempo) GetTicketsForDay(day string) {
 	tablecomponent.Table(columns, rows)
 }
 
+// TODO: Doesn't work for days that are used to bring down overtime
 func (t *Tempo) GetMonthlyOvertime(month string) {
 	start, err := time.Parse(util.MONTH_FORMAT, month)
 	end := start.AddDate(0, 1, -1)

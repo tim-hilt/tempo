@@ -17,7 +17,8 @@ func init() {
 	logging.SetLoglevel()
 }
 
-func parseDateArg(dateArg string) string {
+func ParseDateArg(args []string) string {
+	dateArg := args[0]
 	if strings.HasSuffix(dateArg, ".md") {
 		pathPieces := strings.Split(dateArg, "/")
 		filePieces := strings.Split(pathPieces[len(pathPieces)-1], ".")
@@ -37,27 +38,12 @@ func validateDate(date string) {
 	}
 }
 
-func ParseArgs(args []string) string {
-	var dateArg string
-	if len(args) != 1 {
-		log.Fatal().Msg("enter single argument for date")
-	} else {
-		dateArg = args[0]
-	}
-
-	day := parseDateArg(dateArg)
-
-	return day
-}
-
 func ParseMonthArg(args []string) string {
 	var month string
 	if len(args) == 0 {
 		month = time.Now().Format(util.MONTH_FORMAT)
 	} else if len(args) == 1 {
 		month = args[0]
-	} else {
-		log.Fatal().Msg("enter one or zero arguments for month")
 	}
 
 	validateMonth(month)

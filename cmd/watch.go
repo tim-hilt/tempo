@@ -14,6 +14,7 @@ var watchCmd = &cobra.Command{
 	Use:   "watch",
 	Short: "watch a given directory and submit changes",
 	Long:  "watch a given directory and submit changes",
+	Args:  cobra.ExactArgs(0),
 	Run:   watch,
 }
 
