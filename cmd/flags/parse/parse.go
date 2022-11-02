@@ -1,13 +1,21 @@
 package parse
 
 import (
+	"os"
 	"regexp"
 	"strings"
 	"time"
 
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/tim-hilt/tempo/util"
+	"github.com/tim-hilt/tempo/util/logging"
 )
+
+func init() {
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339})
+	logging.SetLoglevel()
+}
 
 func parseDateArg(dateArg string) string {
 	if strings.HasSuffix(dateArg, ".md") {
