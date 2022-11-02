@@ -8,6 +8,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/tim-hilt/tempo/util/logging"
+	"golang.org/x/exp/constraints"
 )
 
 func init() {
@@ -44,9 +45,11 @@ func Divmod(numerator, denominator int) (quotient, remainder int) {
 	return
 }
 
-func Max(a, b int) int {
-	if a > b {
-		return a
+func Max[T constraints.Ordered](args ...T) (max T) {
+	for _, val := range args {
+		if val > max {
+			max = val
+		}
 	}
-	return b
+	return
 }
