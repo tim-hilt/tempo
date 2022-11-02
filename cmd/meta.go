@@ -28,37 +28,34 @@ func Execute() {
 }
 
 func init() {
-	homedir, err := os.UserHomeDir()
-	cobra.CheckErr(err)
-	defaultConfig := filepath.Join(homedir, ".config/tempo/tempo.yaml")
+	cobra.OnInitialize(initConfig)
 
-	cobra.OnInitialize(func() { initConfig(defaultConfig) })
+	rootCmd.PersistentFlags().IntP("loglevel", "l", 0, "Logging-level, -1 (trace) to 5 (panic)")
+	rootCmd.PersistentFlags().StringP("jirauser", "u", "", "The Jira-User")
+	rootCmd.PersistentFlags().StringP("password", "p", "", "The Password for the Jira-User")
+	rootCmd.PersistentFlags().StringP("notesdir", "n", "", "The directory of the daily notes")
 
-	rootCmd.PersistentFlags().StringVar(&flags.Config, "config", defaultConfig, "config file")
-	// TODO: Default value is not taken into account
-	rootCmd.PersistentFlags().IntVarP(&flags.Loglevel, "loglevel", "l", 3, "Logging-level, -1 (trace) to 5 (panic)")
-	rootCmd.PersistentFlags().StringVarP(&flags.User, "user", "u", "", "The Jira-User")
-	rootCmd.PersistentFlags().StringVarP(&flags.Password, "password", "p", "", "The Password for the Jira-User")
-	rootCmd.PersistentFlags().StringVarP(&flags.NotesDir, "notesdir", "n", ".", "The directory of the daily notes")
-
-	// TODO: Get this to work
 	viper.BindPFlag("loglevel", rootCmd.PersistentFlags().Lookup("loglevel"))
-	viper.BindPFlag("user", rootCmd.PersistentFlags().Lookup("user"))
+	viper.BindPFlag("jiraUser", rootCmd.PersistentFlags().Lookup("jirauser"))
 	viper.BindPFlag("password", rootCmd.PersistentFlags().Lookup("password"))
+	viper.BindPFlag("notesDir", rootCmd.PersistentFlags().Lookup("notesdir"))
 
 	viper.SetDefault("loglevel", 3)
+	viper.SetDefault("notesDir", ".")
 }
 
-func initConfig(defaultConfig string) {
-	if flags.Config != "" {
-		viper.SetConfigFile(flags.Config)
-	} else {
-		viper.AddConfigPath(filepath.Dir(defaultConfig))
-		viper.SetConfigName(filepath.Base(defaultConfig))
-	}
+func initConfig() {
+	home, err := os.UserHomeDir()
+	cobra.CheckErr(err)
+
+	viper.AddConfigPath(filepath.Join(home, ".config/tempo/"))
+	viper.SetConfigType("yaml")
+	viper.SetConfigName("tempo")
 
 	viper.AutomaticEnv()
 
-	err := viper.ReadInConfig()
+	err = viper.ReadInConfig()
 	cobra.CheckErr(err)
+
+	flags.SetFlagvars()
 }

@@ -19,6 +19,11 @@ type DailyNoteEntry struct {
 func getDailyNote(day string) []string {
 	fileName := day + ".md"
 	fileWithPath := filepath.Join(flags.NotesDir, fileName)
+	if strings.HasPrefix(fileWithPath, "~") {
+		home, err := os.UserHomeDir()
+		util.HandleErr(err, "error when searching for users homedir")
+		fileWithPath = filepath.Join(home, fileWithPath[1:])
+	}
 	file, err := os.ReadFile(fileWithPath)
 	util.HandleErr(err, "error when reading daily note "+fileWithPath)
 

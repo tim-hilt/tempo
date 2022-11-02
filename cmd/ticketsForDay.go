@@ -21,7 +21,7 @@ var ticketsForDayCmd = &cobra.Command{
 
 func ticketsForDay(cmd *cobra.Command, args []string) {
 	date := parse.ParseDateArg(args)
-	tempo := tempo.New(flags.User, flags.Password)
+	tempo := tempo.New(flags.JiraUser, flags.Password)
 	tempo.GetTicketsForDay(date)
 }
 

@@ -1,10 +1,21 @@
 package flags
 
+import (
+	"github.com/spf13/viper"
+)
+
 var (
 	Loglevel       int
 	DailyWorkhours int
-	User           string
+	JiraUser       string
 	Password       string
 	NotesDir       string
-	Config         string
 )
+
+func SetFlagvars() {
+	Loglevel = viper.GetInt("loglevel")
+	DailyWorkhours = viper.GetInt("dailyWorkhours")
+	JiraUser = viper.GetString("jiraUser")
+	Password = viper.GetString("password")
+	NotesDir = viper.GetString("notesDir")
+}
