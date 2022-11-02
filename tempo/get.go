@@ -10,6 +10,7 @@ import (
 	"github.com/tim-hilt/tempo/util"
 )
 
+// TODO: Could also pass month as arg as in overtime-func below
 func (t *Tempo) GetMonthlyHours() {
 	now := time.Now()
 	start := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.Local)
@@ -22,7 +23,7 @@ func (t *Tempo) GetMonthlyHours() {
 	}
 
 	hours, minutes := util.Divmod(bookedTimeSeconds/util.SECONDS_IN_MINUTE, util.MINUTES_IN_HOUR)
-	fmt.Println("worked " + fmt.Sprint(hours) + " hours and " + fmt.Sprint(minutes) + " minutes in current month")
+	fmt.Println("Worked hours for " + start.Format(util.MONTH_FORMAT) + ": " + fmt.Sprint(hours) + "." + fmt.Sprint(minutes))
 }
 
 func (t *Tempo) GetTicketsForDay(day string) {

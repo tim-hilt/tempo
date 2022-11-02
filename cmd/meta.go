@@ -35,7 +35,7 @@ func init() {
 	cobra.OnInitialize(func() { initConfig(defaultConfig) })
 
 	rootCmd.PersistentFlags().StringVar(&flags.Config, "config", defaultConfig, "config file (default is $HOME/.config/tempo/tempo.yaml)")
-	rootCmd.PersistentFlags().IntVarP(&flags.Loglevel, "loglevel", "l", 1, "Logging-level, -1 (trace) to 5 (panic)")
+	rootCmd.PersistentFlags().IntVarP(&flags.Loglevel, "loglevel", "l", 3, "Logging-level, -1 (trace) to 5 (panic)")
 	rootCmd.PersistentFlags().StringVarP(&flags.User, "user", "u", "", "The Jira-User")
 	rootCmd.PersistentFlags().StringVarP(&flags.Password, "password", "p", "", "The Password for the Jira-User")
 	rootCmd.PersistentFlags().StringVarP(&flags.NotesDir, "notesdir", "n", ".", "The directory of the daily notes")
