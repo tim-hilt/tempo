@@ -1,21 +1,13 @@
 package parse
 
 import (
-	"os"
 	"regexp"
 	"strings"
 	"time"
 
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 	"github.com/tim-hilt/tempo/util"
 	"github.com/tim-hilt/tempo/util/logging"
 )
-
-func init() {
-	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339})
-	logging.SetLoglevel()
-}
 
 func ParseDateArg(args []string) string {
 	dateArg := args[0]
@@ -34,7 +26,7 @@ func ParseDateArg(args []string) string {
 
 func validateDate(date string) {
 	if match, _ := regexp.MatchString(`\d{4}-\d{2}-\d{2}`, date); !match {
-		log.Fatal().Msg("date isn't correctly formatted: " + date)
+		logging.Logger.Fatal().Msg("date isn't correctly formatted: " + date)
 	}
 }
 
@@ -53,6 +45,6 @@ func ParseMonthArg(args []string) string {
 
 func validateMonth(date string) {
 	if match, _ := regexp.MatchString(`\d{4}-\d{2}`, date); !match {
-		log.Fatal().Msg("date isn't correctly formatted: " + date)
+		logging.Logger.Fatal().Msg("date isn't correctly formatted: " + date)
 	}
 }

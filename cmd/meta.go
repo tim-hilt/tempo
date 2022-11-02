@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/tim-hilt/tempo/cmd/flags"
+	"github.com/tim-hilt/tempo/util/logging"
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -58,4 +59,5 @@ func initConfig() {
 	cobra.CheckErr(err)
 
 	flags.SetFlagvars()
+	logging.SetLoglevel()
 }

@@ -1,11 +1,19 @@
 package logging
 
 import (
+	"os"
+	"time"
+
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/tim-hilt/tempo/cmd/flags"
 )
 
+var Logger zerolog.Logger = log.Logger
+
+func init() {
+	Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339})
+}
 func SetLoglevel() {
 	if flags.Loglevel == -1 {
 		zerolog.SetGlobalLevel(zerolog.TraceLevel)

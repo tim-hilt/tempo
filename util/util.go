@@ -2,19 +2,10 @@ package util
 
 import (
 	"fmt"
-	"os"
-	"time"
 
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 	"github.com/tim-hilt/tempo/util/logging"
 	"golang.org/x/exp/constraints"
 )
-
-func init() {
-	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339})
-	logging.SetLoglevel()
-}
 
 const (
 	DATE_FORMAT       = "2006-01-02"
@@ -25,13 +16,13 @@ const (
 
 func HandleErr(err error, msg string) {
 	if err != nil {
-		log.Fatal().Err(err).Msg(msg)
+		logging.Logger.Fatal().Err(err).Msg(msg)
 	}
 }
 
 func handleErronousHttpStatus(status int) {
 	if status < 200 || status > 299 {
-		log.Fatal().Msg("http-status was " + fmt.Sprint(status) + " instead of 200")
+		logging.Logger.Fatal().Msg("http-status was " + fmt.Sprint(status) + " instead of 200")
 	}
 }
 

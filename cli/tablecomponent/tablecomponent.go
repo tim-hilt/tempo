@@ -1,22 +1,11 @@
 package tablecomponent
 
 import (
-	"os"
-	"time"
-
 	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 	"github.com/tim-hilt/tempo/util"
-	"github.com/tim-hilt/tempo/util/logging"
 )
-
-func init() {
-	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339})
-	logging.SetLoglevel()
-}
 
 var baseStyle = lipgloss.NewStyle().
 	BorderStyle(lipgloss.NormalBorder())
