@@ -6,7 +6,6 @@ const (
 	WorklogsPrefix = prefix + "tempo-timesheets/4/worklogs"
 )
 
-// TODO: Use package-global templates instead of functions
 func UserIdPath() string {
 	return MyselfUrl
 }

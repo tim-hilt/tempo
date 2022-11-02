@@ -32,22 +32,6 @@ func (t *Tempo) GetTicketsForDay(day string) {
 		rows = append(rows, table.Row{worklog.Issue.Ticket, worklog.Issue.Description, fmt.Sprint(hours) + "h" + fmt.Sprint(minutes) + "m"})
 	}
 
-	columns := []table.Column{
-		// TODO: Make this work + more beautiful!
-		{Title: "Ticket", Width: util.Max(getMaxChars(rows, 0), len("Ticket"))},
-		{Title: "Description", Width: util.Max(getMaxChars(rows, 1), len("Description"))},
-		{Title: "Duration", Width: util.Max(getMaxChars(rows, 2), len("Duration"))},
-	}
+	columns := tablecomponent.CreateColumns(rows, []string{"Ticket", "Description", "Duration"})
 	tablecomponent.Table(columns, rows)
-}
-
-// TODO: Make table.Row => string
-func getMaxChars(rows []table.Row, index int) int {
-	max := 0
-	for _, entry := range rows {
-		if len(entry[index]) > max {
-			max = len(entry[index])
-		}
-	}
-	return max
 }
