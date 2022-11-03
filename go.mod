@@ -10,6 +10,7 @@ require (
 	github.com/rs/zerolog v1.28.0
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/viper v1.13.0
+	github.com/yuin/goldmark v1.5.2
 	golang.org/x/exp v0.0.0-20221031165847-c99f073a8326
 )
 

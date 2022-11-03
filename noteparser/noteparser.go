@@ -1,6 +1,7 @@
 package noteparser
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -8,6 +9,10 @@ import (
 
 	"github.com/spf13/viper"
 	"github.com/tim-hilt/tempo/util"
+	"github.com/yuin/goldmark"
+	"github.com/yuin/goldmark/ast"
+	"github.com/yuin/goldmark/extension"
+	"github.com/yuin/goldmark/text"
 )
 
 type DailyNoteEntry struct {
@@ -16,7 +21,7 @@ type DailyNoteEntry struct {
 	DurationMinutes int
 }
 
-func getDailyNote(day string) []string {
+func getDailyNote(day string) []byte {
 	fileName := day + ".md"
 	notesDir := viper.GetString("notesDir")
 	fileWithPath := filepath.Join(notesDir, fileName)
@@ -25,28 +30,55 @@ func getDailyNote(day string) []string {
 		util.HandleErr(err, "error when searching for users homedir")
 		fileWithPath = filepath.Join(home, fileWithPath[1:])
 	}
+
 	file, err := os.ReadFile(fileWithPath)
 	util.HandleErr(err, "error when reading daily note "+fileWithPath)
 
-	fileLines := strings.Split(string(file), "\n")
-	return fileLines
+	return file
 }
 
-func findTicketTable(lines []string) []string {
-	beginTicketTable := -1
-	endTicketTable := -1
+func findTicketTable(file []byte) (ast.Node, error) {
+	md := goldmark.New(goldmark.WithExtensions(extension.Table)).Parser().Parse(text.NewReader(file))
+	node := md.FirstChild()
 
-	for i, line := range lines {
-		if strings.HasPrefix(line, "|") && beginTicketTable == -1 {
-			beginTicketTable = i + 2
-		} else if !strings.HasPrefix(line, "|") && beginTicketTable != -1 {
-			endTicketTable = i
-			break
+	for node != nil {
+		if node.Kind().String() == "Table" && isTicketTable(file, node) {
+			return node, nil
 		}
+		node = node.NextSibling()
 	}
 
-	ticketTable := lines[beginTicketTable:endTicketTable]
-	return ticketTable
+	return nil, errors.New("ticket table not found")
+}
+
+func isTicketTable(file []byte, table ast.Node) bool {
+	tableRow := table.FirstChild()
+	headers := []string{}
+
+	for tableRow != nil {
+		if tableRow.Kind().String() == "TableHeader" {
+			tableCell := tableRow.FirstChild()
+			for tableCell != nil {
+				headers = append(headers, string(tableCell.Text(file)))
+				tableCell = tableCell.NextSibling()
+			}
+		}
+		tableRow = tableRow.NextSibling()
+	}
+
+	return hasColumnHeaders([]string{"Ticket", "Doings", "Time spent"}, headers)
+}
+
+func hasColumnHeaders(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
 }
 
 func calcDurationMinutes(duration string) int {
@@ -58,24 +90,29 @@ func calcDurationMinutes(duration string) int {
 	return hours*60 + minutes
 }
 
-func parseTicketEntries(ticketTable []string) []DailyNoteEntry {
+func parseTicketEntries(ticketTable ast.Node, file []byte) []DailyNoteEntry {
 	ticketEntries := []DailyNoteEntry{}
 
-	for _, entry := range ticketTable {
-		worklogPieces := strings.Split(entry, "|")
-		ticketEntries = append(ticketEntries, DailyNoteEntry{
-			Ticket:          strings.TrimSpace(worklogPieces[1]),
-			Comment:         strings.TrimSpace(worklogPieces[2]),
-			DurationMinutes: calcDurationMinutes(strings.TrimSpace(worklogPieces[3])),
-		})
+	tableRow := ticketTable.FirstChild()
+
+	for tableRow != nil {
+		if tableRow.Kind().String() == "TableRow" {
+			ticket := string(tableRow.FirstChild().Text(file))
+			doings := string(tableRow.FirstChild().NextSibling().Text(file))
+			duration := string(tableRow.FirstChild().NextSibling().NextSibling().Text(file))
+
+			ticketEntries = append(ticketEntries, DailyNoteEntry{Ticket: ticket, Comment: doings, DurationMinutes: calcDurationMinutes(duration)})
+		}
+		tableRow = tableRow.NextSibling()
 	}
 
 	return ticketEntries
 }
 
 func ParseDailyNote(day string) []DailyNoteEntry {
-	fileLines := getDailyNote(day)
-	ticketTable := findTicketTable(fileLines)
-	ticketEntries := parseTicketEntries(ticketTable)
+	dailyNote := getDailyNote(day)
+	ticketTable, err := findTicketTable(dailyNote)
+	util.HandleErr(err, "error when looking for ticket-table")
+	ticketEntries := parseTicketEntries(ticketTable, dailyNote)
 	return ticketEntries
 }
