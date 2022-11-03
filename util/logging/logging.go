@@ -6,12 +6,12 @@ import (
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"github.com/spf13/viper"
+	"github.com/tim-hilt/tempo/util"
 )
 
 func Init() {
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339})
-	loglevel := viper.GetInt("loglevel")
+	loglevel := util.GetConfigParams().Loglevel
 	setLoglevel(loglevel)
 }
 

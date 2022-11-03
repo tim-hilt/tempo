@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/tim-hilt/tempo/util"
 	"github.com/tim-hilt/tempo/util/logging"
 )
 
@@ -30,18 +31,18 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig, logging.Init)
 
-	rootCmd.PersistentFlags().IntP("loglevel", "l", 0, "Logging-level, -1 (trace) to 5 (panic)")
-	rootCmd.PersistentFlags().StringP("jirauser", "u", "", "The Jira-User")
-	rootCmd.PersistentFlags().StringP("password", "p", "", "The Password for the Jira-User")
-	rootCmd.PersistentFlags().StringP("notesdir", "n", "", "The directory of the daily notes")
+	rootCmd.PersistentFlags().IntP(util.LOGLEVEL_FLAG_VAL, "l", 0, "Logging-level, -1 (trace) to 5 (panic)")
+	rootCmd.PersistentFlags().StringP(util.USER_FLAG_VAL, "u", "", "The Jira-User")
+	rootCmd.PersistentFlags().StringP(util.PASSWORD_FLAG_VAL, "p", "", "The Password for the Jira-User")
+	rootCmd.PersistentFlags().StringP(util.NOTESDIR_FLAG_VAL, "n", "", "The directory of the daily notes")
 
-	viper.BindPFlag("loglevel", rootCmd.PersistentFlags().Lookup("loglevel"))
-	viper.BindPFlag("jiraUser", rootCmd.PersistentFlags().Lookup("jirauser"))
-	viper.BindPFlag("password", rootCmd.PersistentFlags().Lookup("password"))
-	viper.BindPFlag("notesDir", rootCmd.PersistentFlags().Lookup("notesdir"))
+	viper.BindPFlag(util.LOGLEVEL_CONFIG_VAL, rootCmd.PersistentFlags().Lookup(util.LOGLEVEL_FLAG_VAL))
+	viper.BindPFlag(util.USER_CONFIG_VAL, rootCmd.PersistentFlags().Lookup(util.USER_FLAG_VAL))
+	viper.BindPFlag(util.PASSWORD_CONFIG_VAL, rootCmd.PersistentFlags().Lookup(util.PASSWORD_FLAG_VAL))
+	viper.BindPFlag(util.NOTESDIR_CONFIG_VAL, rootCmd.PersistentFlags().Lookup(util.NOTESDIR_FLAG_VAL))
 
-	viper.SetDefault("loglevel", 3)
-	viper.SetDefault("notesDir", ".")
+	viper.SetDefault(util.LOGLEVEL_CONFIG_VAL, 3)
+	viper.SetDefault(util.NOTESDIR_CONFIG_VAL, ".")
 }
 
 func initConfig() {

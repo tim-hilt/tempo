@@ -2,8 +2,8 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"github.com/tim-hilt/tempo/tempo"
+	"github.com/tim-hilt/tempo/util"
 )
 
 func init() {
@@ -20,8 +20,7 @@ var monthlyHoursCmd = &cobra.Command{
 }
 
 func monthlyHours(cmd *cobra.Command, args []string) {
-	user := viper.GetString("jiraUser")
-	password := viper.GetString("password")
-	tempoClient := tempo.New(user, password)
+	params := util.GetConfigParams()
+	tempoClient := tempo.New(params.User, params.Password)
 	tempoClient.GetMonthlyHours()
 }

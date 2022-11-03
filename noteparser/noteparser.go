@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/spf13/viper"
 	"github.com/tim-hilt/tempo/util"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
@@ -23,7 +22,7 @@ type DailyNoteEntry struct {
 
 func getDailyNote(day string) []byte {
 	fileName := day + ".md"
-	notesDir := viper.GetString("notesDir")
+	notesDir := util.GetConfigParams().Notesdir
 	fileWithPath := filepath.Join(notesDir, fileName)
 	if strings.HasPrefix(fileWithPath, "~") {
 		home, err := os.UserHomeDir()

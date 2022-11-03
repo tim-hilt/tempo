@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/charmbracelet/bubbles/table"
-	"github.com/spf13/viper"
 	"github.com/tim-hilt/tempo/cli/tablecomponent"
 	"github.com/tim-hilt/tempo/util"
 )
@@ -59,7 +58,7 @@ func (t *Tempo) GetMonthlyOvertime(month string) {
 	}
 
 	workedHours := workedSeconds / util.MINUTES_IN_HOUR / util.SECONDS_IN_MINUTE
-	dailyWorkhours := viper.GetInt("dailyWorkhours") // TODO: No string-literals here! Add all config- or flag-names to utils/constants.go
+	dailyWorkhours := util.GetConfigParams().DailyWorkhours
 	overtime := workedHours - float64(len(daysWorked)*dailyWorkhours)
 
 	fmt.Println("Overtime for " + month + ": " + fmt.Sprint(overtime) + " hours")
