@@ -2,11 +2,13 @@ package noteparser
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 
+	"github.com/rs/zerolog/log"
 	"github.com/tim-hilt/tempo/util"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
@@ -38,16 +40,18 @@ func getDailyNote(day string) []byte {
 
 func findTicketTable(file []byte) (ast.Node, error) {
 	md := goldmark.New(goldmark.WithExtensions(extension.Table)).Parser().Parse(text.NewReader(file))
-	node := md.FirstChild()
+	md.Dump(file, 1)
+	traverseAst(md)
+	node := md
 
-	for node != nil {
-		if node.Kind().String() == "Table" && isTicketTable(file, node) {
+	for {
+		node, err := findNext(node, "Table")
+		if err != nil {
+			return nil, err
+		} else if isTicketTable(file, node) {
 			return node, nil
 		}
-		node = node.NextSibling()
 	}
-
-	return nil, errors.New("ticket table not found")
 }
 
 func isTicketTable(file []byte, table ast.Node) bool {
@@ -65,10 +69,10 @@ func isTicketTable(file []byte, table ast.Node) bool {
 		tableRow = tableRow.NextSibling()
 	}
 
-	return hasColumnHeaders([]string{"Ticket", "Doings", "Time spent"}, headers)
+	return slicesEqual([]string{"Ticket", "Doings", "Time spent"}, headers)
 }
 
-func hasColumnHeaders(a, b []string) bool {
+func slicesEqual(a, b []string) bool {
 	if len(a) != len(b) {
 		return false
 	}
@@ -78,6 +82,48 @@ func hasColumnHeaders(a, b []string) bool {
 		}
 	}
 	return true
+}
+
+func findNext(st ast.Node, kind string) (ast.Node, error) {
+	if st == nil {
+		return nil, errors.New(kind + " not found in ast")
+	} else if st.Kind().String() == kind {
+		log.Info().Msg("found table")
+		return st, nil
+	} else if st.HasChildren() {
+		return findNext(st.FirstChild(), kind)
+	} else if st.NextSibling() == nil {
+		return findNext(st.Parent(), kind)
+	} else {
+		return findNext(st.NextSibling(), kind)
+	}
+}
+
+// TODO: Adapt findNext to reflect the below func
+// TODO: Delete func once the above TODO is finished
+func traverseAst(st ast.Node) {
+	if st == nil {
+		return
+	} else if st.HasChildren() {
+		fmt.Println(st.Kind())
+		traverseAst(st.FirstChild())
+	} else if st.NextSibling() != nil {
+		fmt.Println(st.Kind())
+		traverseAst(st.NextSibling())
+	} else {
+		fmt.Println(st.Kind())
+		st = findNextParentSibling(st)
+		traverseAst(st)
+	}
+}
+
+func findNextParentSibling(st ast.Node) ast.Node {
+	if st.Parent() == nil {
+		return nil
+	} else if st.Parent().NextSibling() != nil {
+		return st.Parent().NextSibling()
+	}
+	return findNextParentSibling(st.Parent())
 }
 
 func calcDurationMinutes(duration string) int {
