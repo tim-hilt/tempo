@@ -3,7 +3,7 @@ package util
 import (
 	"fmt"
 
-	"github.com/tim-hilt/tempo/util/logging"
+	"github.com/rs/zerolog/log"
 	"golang.org/x/exp/constraints"
 )
 
@@ -16,13 +16,13 @@ const (
 
 func HandleErr(err error, msg string) {
 	if err != nil {
-		logging.Logger.Fatal().Err(err).Msg(msg)
+		log.Fatal().Err(err).Msg(msg)
 	}
 }
 
 func handleErronousHttpStatus(status int) {
 	if status < 200 || status > 299 {
-		logging.Logger.Fatal().Msg("http-status was " + fmt.Sprint(status) + " instead of 200")
+		log.Fatal().Msg("http-status was " + fmt.Sprint(status) + " instead of 200")
 	}
 }
 

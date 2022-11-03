@@ -1,19 +1,10 @@
 package logging
 
 import (
-	"os"
-	"time"
-
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 )
-
-var Logger zerolog.Logger = log.Logger
-
-func init() {
-	Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339})
-}
 
 func SetLoglevel() {
 	loglevel := viper.GetInt("loglevel")

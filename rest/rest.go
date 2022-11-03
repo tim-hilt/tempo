@@ -5,9 +5,9 @@ import (
 	"sync"
 
 	"github.com/go-resty/resty/v2"
+	"github.com/rs/zerolog/log"
 	"github.com/tim-hilt/tempo/rest/paths"
 	"github.com/tim-hilt/tempo/util"
-	"github.com/tim-hilt/tempo/util/logging"
 )
 
 type Api struct {
@@ -30,7 +30,7 @@ type userIdResponse struct {
 }
 
 func (b *Api) initUser() {
-	logging.Logger.Info().Msg("Started getting userId")
+	log.Info().Msg("Started getting userId")
 
 	resp, err := b.client.R().
 		SetResult(userIdResponse{}).
@@ -39,7 +39,7 @@ func (b *Api) initUser() {
 	util.HandleResponse(resp.StatusCode(), err, "error when getting myself")
 
 	userId := resp.Result().(*userIdResponse).UserId
-	logging.Logger.Info().Msg("Finished getting userId: " + userId)
+	log.Info().Msg("Finished getting userId: " + userId)
 	b.UserId = userId
 }
 
@@ -62,7 +62,7 @@ type searchWorklogsResult struct {
 }
 
 func (a *Api) FindWorklogsInRange(from string, to string) (worklogs *[]searchWorklogsResult) {
-	logging.Logger.Info().Msg("Started searching for worklogs in range " + from + " - " + to)
+	log.Info().Msg("Started searching for worklogs in range " + from + " - " + to)
 	resp, err := a.client.R().
 		SetBody(searchWorklogBody{From: from, To: to, Users: []string{a.UserId}}).
 		SetResult([]searchWorklogsResult{}).
@@ -70,7 +70,7 @@ func (a *Api) FindWorklogsInRange(from string, to string) (worklogs *[]searchWor
 
 	util.HandleResponse(resp.StatusCode(), err, "error while searching for worklogs in range "+from+" - "+to)
 
-	logging.Logger.Info().Msg("Finished searching for worklogs in range " + from + " - " + to)
+	log.Info().Msg("Finished searching for worklogs in range " + from + " - " + to)
 
 	worklogs = resp.Result().(*[]searchWorklogsResult)
 	return
@@ -90,12 +90,12 @@ func (a *Api) DeleteWorklogs(day string) {
 		go func(worklog searchWorklogsResult) {
 			defer wg.Done()
 			worklogId := fmt.Sprint(worklog.TempoWorklogId)
-			logging.Logger.Info().Msg("Started deleting worklog for ticket " + worklog.Issue.Ticket + " with description: " + worklog.Issue.Description)
+			log.Info().Msg("Started deleting worklog for ticket " + worklog.Issue.Ticket + " with description: " + worklog.Issue.Description)
 
 			resp, err := a.client.R().Delete(paths.DeleteWorklogPath(worklogId))
 			util.HandleResponse(resp.StatusCode(), err, "error while deleting worklog with id "+worklogId)
 
-			logging.Logger.Info().Msg("Finished deleting worklog for ticket " + worklog.Issue.Ticket)
+			log.Info().Msg("Finished deleting worklog for ticket " + worklog.Issue.Ticket)
 		}(worklog)
 	}
 	wg.Wait()
@@ -110,7 +110,7 @@ type worklog struct {
 }
 
 func (a *Api) CreateWorklog(ticket string, comment string, seconds int, day string) {
-	logging.Logger.Info().Msg("Start creating worklog for " + ticket)
+	log.Info().Msg("Start creating worklog for " + ticket)
 
 	resp, err := a.client.R().
 		SetBody(worklog{Ticket: ticket, Comment: comment, Seconds: seconds, Day: day, UserId: a.UserId}).
@@ -118,5 +118,5 @@ func (a *Api) CreateWorklog(ticket string, comment string, seconds int, day stri
 
 	util.HandleResponse(resp.StatusCode(), err, "error when creating worklog")
 
-	logging.Logger.Info().Msg("Finished creating worklog for " + ticket)
+	log.Info().Msg("Finished creating worklog for " + ticket)
 }
