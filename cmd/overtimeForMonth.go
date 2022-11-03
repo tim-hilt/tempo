@@ -22,7 +22,10 @@ var overtimeForMonthCmd = &cobra.Command{
 func overtimeForMonth(cmd *cobra.Command, args []string) {
 	month := parse.ParseMonthArg(args)
 
-	tempoClient := tempo.New(viper.GetString("jiraUser"), viper.GetString("password"))
+	user := viper.GetString("jiraUser")
+	password := viper.GetString("password")
+	tempoClient := tempo.New(user, password)
+
 	tempoClient.GetMonthlyOvertime(month)
 }
 

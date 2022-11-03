@@ -18,7 +18,8 @@ type DailyNoteEntry struct {
 
 func getDailyNote(day string) []string {
 	fileName := day + ".md"
-	fileWithPath := filepath.Join(viper.GetString("notesDir"), fileName)
+	notesDir := viper.GetString("notesDir")
+	fileWithPath := filepath.Join(notesDir, fileName)
 	if strings.HasPrefix(fileWithPath, "~") {
 		home, err := os.UserHomeDir()
 		util.HandleErr(err, "error when searching for users homedir")

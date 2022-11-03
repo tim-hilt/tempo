@@ -21,8 +21,12 @@ var ticketsForDayCmd = &cobra.Command{
 
 func ticketsForDay(cmd *cobra.Command, args []string) {
 	date := parse.ParseDateArg(args)
-	tempo := tempo.New(viper.GetString("jiraUser"), viper.GetString("password"))
-	tempo.GetTicketsForDay(date)
+
+	user := viper.GetString("jiraUser")
+	password := viper.GetString("password")
+	tempoClient := tempo.New(user, password)
+
+	tempoClient.GetTicketsForDay(date)
 }
 
 func init() {

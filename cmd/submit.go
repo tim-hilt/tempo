@@ -23,6 +23,8 @@ func init() {
 func submit(cmd *cobra.Command, args []string) {
 	day := parse.ParseDateArg(args)
 
-	tempoClient := tempo.New(viper.GetString("jiraUser"), viper.GetString("password"))
+	user := viper.GetString("jiraUser")
+	password := viper.GetString("password")
+	tempoClient := tempo.New(user, password)
 	tempoClient.SubmitDay(day)
 }

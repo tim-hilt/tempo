@@ -20,6 +20,8 @@ var monthlyHoursCmd = &cobra.Command{
 }
 
 func monthlyHours(cmd *cobra.Command, args []string) {
-	tempoClient := tempo.New(viper.GetString("jiraUser"), viper.GetString("password"))
+	user := viper.GetString("jiraUser")
+	password := viper.GetString("password")
+	tempoClient := tempo.New(user, password)
 	tempoClient.GetMonthlyHours()
 }
