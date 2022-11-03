@@ -1,13 +1,21 @@
 package logging
 
 import (
+	"os"
+	"time"
+
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 )
 
-func SetLoglevel() {
+func Init() {
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339})
 	loglevel := viper.GetInt("loglevel")
+	setLoglevel(loglevel)
+}
+
+func setLoglevel(loglevel int) {
 	if loglevel == -1 {
 		zerolog.SetGlobalLevel(zerolog.TraceLevel)
 	} else if loglevel == 0 {

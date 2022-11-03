@@ -28,7 +28,7 @@ func Execute() {
 }
 
 func init() {
-	cobra.OnInitialize(initConfig, logging.SetLoglevel)
+	cobra.OnInitialize(initConfig, logging.Init)
 
 	rootCmd.PersistentFlags().IntP("loglevel", "l", 0, "Logging-level, -1 (trace) to 5 (panic)")
 	rootCmd.PersistentFlags().StringP("jirauser", "u", "", "The Jira-User")
