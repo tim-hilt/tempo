@@ -66,3 +66,15 @@ func Contains(s []string, e string) bool {
 	}
 	return false
 }
+
+func SlicesEqual(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
+}

@@ -1,8 +1,6 @@
 package noteparser
 
 import (
-	"errors"
-	"fmt"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -38,92 +36,40 @@ func getDailyNote(day string) []byte {
 	return file
 }
 
-func findTicketTable(file []byte) (ast.Node, error) {
-	md := goldmark.New(goldmark.WithExtensions(extension.Table)).Parser().Parse(text.NewReader(file))
-	md.Dump(file, 1)
-	traverseAst(md)
-	node := md
+func findTicketTable(file []byte) ast.Node {
+	node := goldmark.New(goldmark.WithExtensions(extension.Table)).Parser().Parse(text.NewReader(file)).FirstChild()
 
-	for {
-		node, err := findNext(node, "Table")
-		if err != nil {
-			return nil, err
-		} else if isTicketTable(file, node) {
-			return node, nil
+	for node != nil {
+		if node.Kind().String() == "Table" {
+			if isTicketTable(node, file) {
+				return node
+			}
 		}
+		node = node.NextSibling()
 	}
+
+	log.Fatal().Msg("ticket table not found")
+	return nil
 }
 
-func isTicketTable(file []byte, table ast.Node) bool {
-	tableRow := table.FirstChild()
+func isTicketTable(table ast.Node, file []byte) bool {
 	headers := []string{}
+	tableRow := table.FirstChild()
 
 	for tableRow != nil {
 		if tableRow.Kind().String() == "TableHeader" {
 			tableCell := tableRow.FirstChild()
 			for tableCell != nil {
-				headers = append(headers, string(tableCell.Text(file)))
+				if tableCell.Kind().String() == "TableCell" {
+					headers = append(headers, string(tableCell.Text(file)))
+				}
 				tableCell = tableCell.NextSibling()
 			}
 		}
 		tableRow = tableRow.NextSibling()
 	}
 
-	return slicesEqual([]string{"Ticket", "Doings", "Time spent"}, headers)
-}
-
-func slicesEqual(a, b []string) bool {
-	if len(a) != len(b) {
-		return false
-	}
-	for i := range a {
-		if a[i] != b[i] {
-			return false
-		}
-	}
-	return true
-}
-
-func findNext(st ast.Node, kind string) (ast.Node, error) {
-	if st == nil {
-		return nil, errors.New(kind + " not found in ast")
-	} else if st.Kind().String() == kind {
-		log.Info().Msg("found table")
-		return st, nil
-	} else if st.HasChildren() {
-		return findNext(st.FirstChild(), kind)
-	} else if st.NextSibling() == nil {
-		return findNext(st.Parent(), kind)
-	} else {
-		return findNext(st.NextSibling(), kind)
-	}
-}
-
-// TODO: Adapt findNext to reflect the below func
-// TODO: Delete func once the above TODO is finished
-func traverseAst(st ast.Node) {
-	if st == nil {
-		return
-	} else if st.HasChildren() {
-		fmt.Println(st.Kind())
-		traverseAst(st.FirstChild())
-	} else if st.NextSibling() != nil {
-		fmt.Println(st.Kind())
-		traverseAst(st.NextSibling())
-	} else {
-		fmt.Println(st.Kind())
-		st = findNextParentSibling(st)
-		traverseAst(st)
-	}
-}
-
-func findNextParentSibling(st ast.Node) ast.Node {
-	if st.Parent() == nil {
-		return nil
-	} else if st.Parent().NextSibling() != nil {
-		return st.Parent().NextSibling()
-	}
-	return findNextParentSibling(st.Parent())
+	return util.SlicesEqual([]string{"Ticket", "Doings", "Time spent"}, headers)
 }
 
 func calcDurationMinutes(duration string) int {
@@ -137,27 +83,28 @@ func calcDurationMinutes(duration string) int {
 
 func parseTicketEntries(ticketTable ast.Node, file []byte) []DailyNoteEntry {
 	ticketEntries := []DailyNoteEntry{}
-
 	tableRow := ticketTable.FirstChild()
 
 	for tableRow != nil {
 		if tableRow.Kind().String() == "TableRow" {
-			ticket := string(tableRow.FirstChild().Text(file))
-			doings := string(tableRow.FirstChild().NextSibling().Text(file))
-			duration := string(tableRow.FirstChild().NextSibling().NextSibling().Text(file))
-
-			ticketEntries = append(ticketEntries, DailyNoteEntry{Ticket: ticket, Comment: doings, DurationMinutes: calcDurationMinutes(duration)})
+			tableCell := tableRow.FirstChild()
+			rowVals := []string{}
+			for tableCell != nil {
+				if tableCell.Kind().String() == "TableCell" {
+					rowVals = append(rowVals, string(tableCell.Text(file)))
+				}
+				tableCell = tableCell.NextSibling()
+			}
+			ticketEntries = append(ticketEntries, DailyNoteEntry{Ticket: rowVals[0], Comment: rowVals[1], DurationMinutes: calcDurationMinutes(rowVals[2])})
 		}
 		tableRow = tableRow.NextSibling()
 	}
-
 	return ticketEntries
 }
 
 func ParseDailyNote(day string) []DailyNoteEntry {
 	dailyNote := getDailyNote(day)
-	ticketTable, err := findTicketTable(dailyNote)
-	util.HandleErr(err, "error when looking for ticket-table")
+	ticketTable := findTicketTable(dailyNote)
 	ticketEntries := parseTicketEntries(ticketTable, dailyNote)
 	return ticketEntries
 }
