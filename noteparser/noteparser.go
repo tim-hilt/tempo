@@ -56,6 +56,7 @@ func isTicketTable(table ast.Node, file []byte) bool {
 	headers := []string{}
 	tableRow := table.FirstChild()
 
+	// TODO: Is there a better pattern than the nested while-loops?
 	for tableRow != nil {
 		if tableRow.Kind().String() == "TableHeader" {
 			tableCell := tableRow.FirstChild()
