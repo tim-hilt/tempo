@@ -22,7 +22,8 @@ func (t *Tempo) GetMonthlyHours() {
 	}
 
 	hours, minutes := util.Divmod(bookedTimeSeconds/util.SECONDS_IN_MINUTE, util.MINUTES_IN_HOUR)
-	fmt.Println("Worked hours for " + start.Format(util.MONTH_FORMAT) + ": " + fmt.Sprintf("%02d", hours) + "." + fmt.Sprintf("%02d", minutes))
+	fmt.Println("Worked hours for " + start.Format(util.MONTH_FORMAT) + ": " +
+		fmt.Sprintf("%02d", hours) + "." + fmt.Sprintf("%02d", minutes))
 }
 
 func (t *Tempo) GetTicketsForDay(day string) {
@@ -30,7 +31,8 @@ func (t *Tempo) GetTicketsForDay(day string) {
 	rows := []table.Row{}
 	for _, worklog := range *worklogs {
 		hours, minutes := util.Divmod(worklog.DurationSeconds/util.SECONDS_IN_MINUTE, util.MINUTES_IN_HOUR)
-		rows = append(rows, table.Row{worklog.Issue.Ticket, worklog.Issue.Description, fmt.Sprintf("%02d", hours) + "h" + fmt.Sprintf("%02d", minutes) + "m"})
+		rows = append(rows, table.Row{worklog.Issue.Ticket, worklog.Issue.Description,
+			fmt.Sprintf("%02d", hours) + "h" + fmt.Sprintf("%02d", minutes) + "m"})
 	}
 
 	columns := tablecomponent.CreateColumns(rows, []string{"Ticket", "Description", "Duration"})

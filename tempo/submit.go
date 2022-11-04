@@ -30,5 +30,6 @@ func (t *Tempo) SubmitDay(day string) {
 	wg.Wait()
 
 	hours, minutes := util.Divmod(workedMinutes, util.MINUTES_IN_HOUR)
-	fmt.Println("successfully logged " + fmt.Sprintf("%02d", hours) + " hours and " + fmt.Sprintf("%02d", minutes) + " minutes on " + day)
+	fmt.Println("successfully logged " + fmt.Sprintf("%02d", hours) + " hours and " +
+		fmt.Sprintf("%02d", minutes) + " minutes on " + day)
 }
