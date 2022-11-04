@@ -6,12 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/rs/zerolog/log"
 	"github.com/tim-hilt/tempo/util"
-	"github.com/yuin/goldmark"
-	"github.com/yuin/goldmark/ast"
-	"github.com/yuin/goldmark/extension"
-	"github.com/yuin/goldmark/text"
 )
 
 type DailyNoteEntry struct {
@@ -36,43 +31,6 @@ func getDailyNote(day string) []byte {
 	return file
 }
 
-func findTicketTable(file []byte) ast.Node {
-	node := goldmark.New(goldmark.WithExtensions(extension.Table)).Parser().Parse(text.NewReader(file)).FirstChild()
-
-	for node != nil {
-		if node.Kind().String() == "Table" {
-			if isTicketTable(node, file) {
-				return node
-			}
-		}
-		node = node.NextSibling()
-	}
-
-	log.Fatal().Msg("ticket table not found")
-	return nil
-}
-
-func isTicketTable(table ast.Node, file []byte) bool {
-	headers := []string{}
-	tableRow := table.FirstChild()
-
-	// TODO: Is there a better pattern than the nested while-loops?
-	for tableRow != nil {
-		if tableRow.Kind().String() == "TableHeader" {
-			tableCell := tableRow.FirstChild()
-			for tableCell != nil {
-				if tableCell.Kind().String() == "TableCell" {
-					headers = append(headers, string(tableCell.Text(file)))
-				}
-				tableCell = tableCell.NextSibling()
-			}
-		}
-		tableRow = tableRow.NextSibling()
-	}
-
-	return util.SlicesEqual([]string{"Ticket", "Doings", "Time spent"}, headers)
-}
-
 func calcDurationMinutes(duration string) int {
 	foo := strings.Split(duration, ":")
 	hours, err := strconv.Atoi(foo[0])
@@ -82,30 +40,8 @@ func calcDurationMinutes(duration string) int {
 	return hours*60 + minutes
 }
 
-func parseTicketEntries(ticketTable ast.Node, file []byte) []DailyNoteEntry {
-	ticketEntries := []DailyNoteEntry{}
-	tableRow := ticketTable.FirstChild()
-
-	for tableRow != nil {
-		if tableRow.Kind().String() == "TableRow" {
-			tableCell := tableRow.FirstChild()
-			rowVals := []string{}
-			for tableCell != nil {
-				if tableCell.Kind().String() == "TableCell" {
-					rowVals = append(rowVals, string(tableCell.Text(file)))
-				}
-				tableCell = tableCell.NextSibling()
-			}
-			ticketEntries = append(ticketEntries, DailyNoteEntry{Ticket: rowVals[0], Comment: rowVals[1], DurationMinutes: calcDurationMinutes(rowVals[2])})
-		}
-		tableRow = tableRow.NextSibling()
-	}
-	return ticketEntries
-}
-
 func ParseDailyNote(day string) []DailyNoteEntry {
 	dailyNote := getDailyNote(day)
-	ticketTable := findTicketTable(dailyNote)
-	ticketEntries := parseTicketEntries(ticketTable, dailyNote)
+	ticketEntries := getTickets(dailyNote)
 	return ticketEntries
 }
