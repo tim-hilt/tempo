@@ -1,13 +1,15 @@
 package rest
 
 import (
+	"context"
+	"errors"
 	"fmt"
-	"sync"
+	"net/http"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/rs/zerolog/log"
 	"github.com/tim-hilt/tempo/rest/paths"
-	"github.com/tim-hilt/tempo/util"
+	"golang.org/x/sync/errgroup"
 )
 
 type Api struct {
@@ -29,18 +31,25 @@ type userIdResponse struct {
 	UserId string `json:"key"`
 }
 
-func (b *Api) initUser() {
+func (b *Api) initUser() error {
 	log.Info().Msg("Started getting userId")
 
 	resp, err := b.client.R().
 		SetResult(userIdResponse{}).
 		Get(paths.UserIdPath())
+	status := resp.StatusCode()
 
-	util.HandleResponse(resp.StatusCode(), err, "error when getting myself")
+	if err != nil {
+		return err
+	} else if status != 200 {
+		return errors.New("error when getting userId: Response was HTTP-Status" + fmt.Sprint(status))
+	}
 
 	userId := resp.Result().(*userIdResponse).UserId
 	log.Info().Msg("Finished getting userId: " + userId)
 	b.UserId = userId
+
+	return nil
 }
 
 type searchWorklogBody struct {
@@ -61,44 +70,63 @@ type searchWorklogsResult struct {
 	Date            string `json:"started"`
 }
 
-func (a *Api) FindWorklogsInRange(from string, to string) (worklogs *[]searchWorklogsResult) {
+func (a *Api) FindWorklogsInRange(from string, to string) (*[]searchWorklogsResult, error) {
 	log.Info().Msg("Started searching for worklogs in range " + from + " - " + to)
 	resp, err := a.client.R().
 		SetBody(searchWorklogBody{From: from, To: to, Users: []string{a.UserId}}).
 		SetResult([]searchWorklogsResult{}).
 		Post(paths.FindWorklogsPath())
+	status := resp.StatusCode()
 
-	util.HandleResponse(resp.StatusCode(), err, "error while searching for worklogs in range "+from+" - "+to)
+	if err != nil {
+		return nil, err
+	} else if status != http.StatusOK {
+		return nil, errors.New("error when searching for worklogs in range " + from +
+			" to " + to + ": Response was HTTP-status " + fmt.Sprint(status))
+	}
 
 	log.Info().Msg("Finished searching for worklogs in range " + from + " - " + to)
 
-	worklogs = resp.Result().(*[]searchWorklogsResult)
-	return
+	worklogs := resp.Result().(*[]searchWorklogsResult)
+	return worklogs, nil
 }
 
-func (a *Api) findWorklogIdsOn(day string) *[]searchWorklogsResult {
-	worklogs := a.FindWorklogsInRange(day, day)
-	return worklogs
+func (a *Api) findWorklogIdsOn(day string) (*[]searchWorklogsResult, error) {
+	worklogs, err := a.FindWorklogsInRange(day, day)
+	if err != nil {
+		return nil, err
+	}
+	return worklogs, nil
 }
 
-func (a *Api) DeleteWorklogs(day string) {
-	worklogs := a.findWorklogIdsOn(day)
-	var wg sync.WaitGroup
+func (a *Api) DeleteWorklogs(day string) error {
+	worklogs, err := a.findWorklogIdsOn(day)
+	if err != nil {
+		return err
+	}
+	errs, _ := errgroup.WithContext(context.Background())
 
 	for _, worklog := range *worklogs {
-		wg.Add(1)
-		go func(worklog searchWorklogsResult) {
-			defer wg.Done()
+		errs.Go(func() error {
 			worklogId := fmt.Sprint(worklog.TempoWorklogId)
-			log.Info().Msg("Started deleting worklog for ticket " + worklog.Issue.Ticket + " with description: " + worklog.Issue.Description)
+			log.Info().Msg("Started deleting worklog for ticket " + worklog.Issue.Ticket +
+				" with description: " + worklog.Issue.Description)
 
 			resp, err := a.client.R().Delete(paths.DeleteWorklogPath(worklogId))
-			util.HandleResponse(resp.StatusCode(), err, "error while deleting worklog with id "+worklogId)
+			status := resp.StatusCode()
+
+			if err != nil {
+				return err
+			} else if status != http.StatusOK {
+				return errors.New("error when deleting worklog for ticket " + worklog.Issue.Ticket +
+					": HTTP-response was " + fmt.Sprint(status))
+			}
 
 			log.Info().Msg("Finished deleting worklog for ticket " + worklog.Issue.Ticket)
-		}(worklog)
+			return nil
+		})
 	}
-	wg.Wait()
+	return errs.Wait()
 }
 
 type worklog struct {
@@ -109,14 +137,21 @@ type worklog struct {
 	UserId  string `json:"worker"`
 }
 
-func (a *Api) CreateWorklog(ticket string, comment string, seconds int, day string) {
+func (a *Api) CreateWorklog(ticket string, comment string, seconds int, day string) error {
 	log.Info().Msg("Start creating worklog for " + ticket)
 
 	resp, err := a.client.R().
 		SetBody(worklog{Ticket: ticket, Comment: comment, Seconds: seconds, Day: day, UserId: a.UserId}).
 		Post(paths.CreateWorklogPath())
+	status := resp.StatusCode()
 
-	util.HandleResponse(resp.StatusCode(), err, "error when creating worklog")
+	if err != nil {
+		return err
+	} else if status != http.StatusOK {
+		return errors.New("error when creating worklog for ticket " + ticket + ": HTTP-status was " + fmt.Sprint(status))
+	}
 
 	log.Info().Msg("Finished creating worklog for " + ticket)
+
+	return nil
 }
