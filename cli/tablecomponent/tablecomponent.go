@@ -4,7 +4,6 @@ import (
 	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/tim-hilt/tempo/util"
 )
 
 var baseStyle = lipgloss.NewStyle().
@@ -24,7 +23,7 @@ func (m model) View() string {
 	return baseStyle.Render(m.table.View()) + "\n"
 }
 
-func Table(columns []table.Column, rows []table.Row) {
+func Table(columns []table.Column, rows []table.Row) error {
 
 	t := table.New(
 		table.WithColumns(columns),
@@ -41,5 +40,10 @@ func Table(columns []table.Column, rows []table.Row) {
 
 	m := model{t}
 	err := tea.NewProgram(m).Start()
-	util.HandleErr(err, "error running table")
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

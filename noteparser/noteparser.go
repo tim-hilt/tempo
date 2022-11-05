@@ -15,33 +15,53 @@ type DailyNoteEntry struct {
 	DurationMinutes int
 }
 
-func getDailyNote(day string) []byte {
+func getDailyNote(day string) ([]byte, error) {
 	fileName := day + ".md"
 	notesDir := util.GetConfigParams().Notesdir
 	fileWithPath := filepath.Join(notesDir, fileName)
 	if strings.HasPrefix(fileWithPath, "~") {
 		home, err := os.UserHomeDir()
-		util.HandleErr(err, "error when searching for users homedir")
+
+		if err != nil {
+			return nil, err
+		}
+
 		fileWithPath = filepath.Join(home, fileWithPath[1:])
 	}
 
 	file, err := os.ReadFile(fileWithPath)
-	util.HandleErr(err, "error when reading daily note "+fileWithPath)
 
-	return file
+	if err != nil {
+		return nil, err
+	}
+
+	return file, nil
 }
 
-func calcDurationMinutes(duration string) int {
+func calcDurationMinutes(duration string) (int, error) {
 	foo := strings.Split(duration, ":")
 	hours, err := strconv.Atoi(foo[0])
-	util.HandleErr(err, "error when converting hours-string in duration \""+duration+"\" to int")
+
+	if err != nil {
+		return -1, err
+	}
+
 	minutes, err := strconv.Atoi(foo[1])
-	util.HandleErr(err, "error when converting minutes-string in duration \""+duration+"\" to int")
-	return hours*60 + minutes
+
+	if err != nil {
+		return -1, err
+	}
+
+	return hours*60 + minutes, nil
 }
 
-func ParseDailyNote(day string) []DailyNoteEntry {
-	dailyNote := getDailyNote(day)
+func ParseDailyNote(day string) ([]DailyNoteEntry, error) {
+	dailyNote, err := getDailyNote(day)
+
+	if err != nil {
+		return nil, err
+	}
+
 	ticketEntries := getTickets(dailyNote)
-	return ticketEntries
+	return ticketEntries, nil
 }

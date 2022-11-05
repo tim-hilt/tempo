@@ -10,11 +10,15 @@ import (
 )
 
 // TODO: Could also pass month as arg as in overtime-func below
-func (t *Tempo) GetMonthlyHours() {
+func (t *Tempo) GetMonthlyHours() error {
 	now := time.Now()
 	start := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.Local)
 	end := start.AddDate(0, 1, -1)
-	worklogs := t.Api.FindWorklogsInRange(start.Format(util.DATE_FORMAT), end.Format(util.DATE_FORMAT))
+	worklogs, err := t.Api.FindWorklogsInRange(start.Format(util.DATE_FORMAT), end.Format(util.DATE_FORMAT))
+
+	if err != nil {
+		return err
+	}
 
 	bookedTimeSeconds := 0
 	for _, worklog := range *worklogs {
@@ -24,10 +28,17 @@ func (t *Tempo) GetMonthlyHours() {
 	hours, minutes := util.Divmod(bookedTimeSeconds/util.SECONDS_IN_MINUTE, util.MINUTES_IN_HOUR)
 	fmt.Println("Worked hours for " + start.Format(util.MONTH_FORMAT) + ": " +
 		fmt.Sprintf("%02d", hours) + "." + fmt.Sprintf("%02d", minutes))
+
+	return nil
 }
 
-func (t *Tempo) GetTicketsForDay(day string) {
-	worklogs := t.Api.FindWorklogsInRange(day, day)
+func (t *Tempo) GetTicketsForDay(day string) error {
+	worklogs, err := t.Api.FindWorklogsInRange(day, day)
+
+	if err != nil {
+		return err
+	}
+
 	rows := []table.Row{}
 	for _, worklog := range *worklogs {
 		hours, minutes := util.Divmod(worklog.DurationSeconds/util.SECONDS_IN_MINUTE, util.MINUTES_IN_HOUR)
@@ -37,14 +48,23 @@ func (t *Tempo) GetTicketsForDay(day string) {
 
 	columns := tablecomponent.CreateColumns(rows, []string{"Ticket", "Description", "Duration"})
 	tablecomponent.Table(columns, rows)
+	return nil
 }
 
 // TODO: Doesn't work for days that are used to bring down overtime
-func (t *Tempo) GetMonthlyOvertime(month string) {
+func (t *Tempo) GetMonthlyOvertime(month string) error {
 	start, err := time.Parse(util.MONTH_FORMAT, month)
 	end := start.AddDate(0, 1, -1)
-	util.HandleErr(err, "Error when parsing "+month+" to time.Time")
-	worklogs := t.Api.FindWorklogsInRange(start.Format(util.DATE_FORMAT), end.Format(util.DATE_FORMAT))
+
+	if err != nil {
+		return err
+	}
+
+	worklogs, err := t.Api.FindWorklogsInRange(start.Format(util.DATE_FORMAT), end.Format(util.DATE_FORMAT))
+
+	if err != nil {
+		return err
+	}
 
 	var workedSeconds float64 = 0
 	daysWorked := []string{}
@@ -64,4 +84,6 @@ func (t *Tempo) GetMonthlyOvertime(month string) {
 	overtime := workedHours - float64(len(daysWorked)*dailyWorkhours)
 
 	fmt.Println("Overtime for " + month + ": " + fmt.Sprint(overtime) + " hours")
+
+	return nil
 }
