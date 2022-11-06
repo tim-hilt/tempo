@@ -5,19 +5,20 @@ import (
 	"time"
 
 	"github.com/charmbracelet/bubbles/table"
+	"github.com/rs/zerolog/log"
 	"github.com/tim-hilt/tempo/cli/tablecomponent"
 	"github.com/tim-hilt/tempo/util"
 )
 
 // TODO: Could also pass month as arg as in overtime-func below
-func (t *Tempo) GetMonthlyHours() error {
+func (t *Tempo) GetMonthlyHours() {
 	now := time.Now()
 	start := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.Local)
 	end := start.AddDate(0, 1, -1)
 	worklogs, err := t.Api.FindWorklogsInRange(start.Format(util.DATE_FORMAT), end.Format(util.DATE_FORMAT))
 
 	if err != nil {
-		return err
+		log.Fatal().Err(err).Msg("error when searching for worklogs")
 	}
 
 	bookedTimeSeconds := 0
@@ -28,15 +29,13 @@ func (t *Tempo) GetMonthlyHours() error {
 	hours, minutes := util.Divmod(bookedTimeSeconds/util.SECONDS_IN_MINUTE, util.MINUTES_IN_HOUR)
 	fmt.Println("Worked hours for " + start.Format(util.MONTH_FORMAT) + ": " +
 		fmt.Sprintf("%02d", hours) + "." + fmt.Sprintf("%02d", minutes))
-
-	return nil
 }
 
-func (t *Tempo) GetTicketsForDay(day string) error {
+func (t *Tempo) GetTicketsForDay(day string) {
 	worklogs, err := t.Api.FindWorklogsInRange(day, day)
 
 	if err != nil {
-		return err
+		log.Fatal().Err(err).Msg("error when searching for worklogs")
 	}
 
 	rows := []table.Row{}
@@ -47,23 +46,24 @@ func (t *Tempo) GetTicketsForDay(day string) error {
 	}
 
 	columns := tablecomponent.CreateColumns(rows, []string{"Ticket", "Description", "Duration"})
-	tablecomponent.Table(columns, rows)
-	return nil
+	if err := tablecomponent.Table(columns, rows); err != nil {
+		log.Fatal().Err(err).Msg("error when creating table")
+	}
 }
 
 // TODO: Doesn't work for days that are used to bring down overtime
-func (t *Tempo) GetMonthlyOvertime(month string) error {
+func (t *Tempo) GetMonthlyOvertime(month string) {
 	start, err := time.Parse(util.MONTH_FORMAT, month)
-	end := start.AddDate(0, 1, -1)
 
 	if err != nil {
-		return err
+		log.Fatal().Err(err).Msg("error when parsing date: " + month)
 	}
 
+	end := start.AddDate(0, 1, -1)
 	worklogs, err := t.Api.FindWorklogsInRange(start.Format(util.DATE_FORMAT), end.Format(util.DATE_FORMAT))
 
 	if err != nil {
-		return err
+		log.Fatal().Err(err).Msg("error when searching for worklogs")
 	}
 
 	var workedSeconds float64 = 0
@@ -84,6 +84,4 @@ func (t *Tempo) GetMonthlyOvertime(month string) error {
 	overtime := workedHours - float64(len(daysWorked)*dailyWorkhours)
 
 	fmt.Println("Overtime for " + month + ": " + fmt.Sprint(overtime) + " hours")
-
-	return nil
 }

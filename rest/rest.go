@@ -22,7 +22,11 @@ func New(user string, password string) *Api {
 	apiClient.SetBasicAuth(user, password)
 
 	tempo := &Api{client: apiClient}
-	tempo.initUser()
+	err := tempo.initUser()
+
+	if err != nil {
+		log.Fatal().Err(err).Msg("error when getting user-id")
+	}
 
 	return tempo
 }

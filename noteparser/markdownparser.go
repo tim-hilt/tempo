@@ -9,14 +9,18 @@ import (
 	"github.com/yuin/goldmark/text"
 )
 
-func applyOnChildren(parent ast.Node, kind string, fun func(child ast.Node)) {
+func applyOnChildren(parent ast.Node, kind string, fun func(child ast.Node) error) error {
 	child := parent.FirstChild()
 	for child != nil {
 		if child.Kind().String() == kind {
-			fun(child)
+			err := fun(child)
+			if err != nil {
+				return err
+			}
 		}
 		child = child.NextSibling()
 	}
+	return nil
 }
 
 // TODO: Could implement interface that has to be satisfied in order to
@@ -26,10 +30,11 @@ func findTicketTable(file []byte) ast.Node {
 		Parser().Parse(text.NewReader(file))
 
 	var ticketTable ast.Node = nil
-	applyOnChildren(document, "Table", func(node ast.Node) {
+	applyOnChildren(document, "Table", func(node ast.Node) error {
 		if isTicketTable(node, file) {
 			ticketTable = node
 		}
+		return nil
 	})
 
 	if ticketTable == nil {
@@ -40,10 +45,12 @@ func findTicketTable(file []byte) ast.Node {
 
 func getTableHeaders(table ast.Node, file []byte) []string {
 	headers := []string{}
-	applyOnChildren(table, "TableHeader", func(tableRow ast.Node) {
-		applyOnChildren(tableRow, "TableCell", func(tableCell ast.Node) {
+	applyOnChildren(table, "TableHeader", func(tableRow ast.Node) error {
+		applyOnChildren(tableRow, "TableCell", func(tableCell ast.Node) error {
 			headers = append(headers, string(tableCell.Text(file)))
+			return nil
 		})
+		return nil
 	})
 	return headers
 }
@@ -53,22 +60,37 @@ func isTicketTable(table ast.Node, file []byte) bool {
 	return util.SlicesEqual([]string{"Ticket", "Doings", "Time spent"}, headers)
 }
 
-func parseTicketEntries(ticketTable ast.Node, file []byte) []DailyNoteEntry {
+func parseTicketEntries(ticketTable ast.Node, file []byte) ([]DailyNoteEntry, error) {
 	ticketEntries := []DailyNoteEntry{}
 
-	applyOnChildren(ticketTable, "TableRow", func(tableRow ast.Node) {
+	err := applyOnChildren(ticketTable, "TableRow", func(tableRow ast.Node) error {
 		rowVals := []string{}
-		applyOnChildren(tableRow, "TableCell", func(tableCell ast.Node) {
+		applyOnChildren(tableRow, "TableCell", func(tableCell ast.Node) error {
 			rowVals = append(rowVals, string(tableCell.Text(file)))
+			return nil
 		})
-		ticketEntries = append(ticketEntries, DailyNoteEntry{Ticket: rowVals[0], Comment: rowVals[1], DurationMinutes: calcDurationMinutes(rowVals[2])})
+		durationMinutes, err := calcDurationMinutes(rowVals[3])
+
+		if err != nil {
+			return err
+		}
+
+		ticketEntries = append(ticketEntries, DailyNoteEntry{Ticket: rowVals[0], Comment: rowVals[1], DurationMinutes: durationMinutes})
+		return nil
 	})
 
-	return ticketEntries
+	if err != nil {
+		return nil, err
+	}
+
+	return ticketEntries, nil
 }
 
-func getTickets(dailyNote []byte) []DailyNoteEntry {
+func getTickets(dailyNote []byte) ([]DailyNoteEntry, error) {
 	ticketTable := findTicketTable(dailyNote)
-	ticketEntries := parseTicketEntries(ticketTable, dailyNote)
-	return ticketEntries
+	ticketEntries, err := parseTicketEntries(ticketTable, dailyNote)
+	if err != nil {
+		return nil, err
+	}
+	return ticketEntries, nil
 }

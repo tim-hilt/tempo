@@ -62,6 +62,11 @@ func ParseDailyNote(day string) ([]DailyNoteEntry, error) {
 		return nil, err
 	}
 
-	ticketEntries := getTickets(dailyNote)
+	ticketEntries, err := getTickets(dailyNote)
+
+	if err != nil {
+		return nil, err
+	}
+
 	return ticketEntries, nil
 }

@@ -4,15 +4,22 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/rs/zerolog/log"
 	"github.com/tim-hilt/tempo/noteparser"
 	"github.com/tim-hilt/tempo/util"
 )
 
 func (t *Tempo) SubmitDay(day string) {
-	ticketEntries := noteparser.ParseDailyNote(day)
+	ticketEntries, err := noteparser.ParseDailyNote(day)
+
+	if err != nil {
+		log.Fatal().Err(err).Msg("error when parsing daily note")
+	}
 
 	// Clean up first
-	t.Api.DeleteWorklogs(day)
+	if err := t.Api.DeleteWorklogs(day); err != nil {
+		log.Fatal().Err(err).Msg("error when deleting worklogs")
+	}
 
 	// ...then book on clean state
 	workedMinutes := 0
@@ -22,7 +29,9 @@ func (t *Tempo) SubmitDay(day string) {
 		wg.Add(1)
 		go func(ticket noteparser.DailyNoteEntry) {
 			defer wg.Done()
-			t.Api.CreateWorklog(ticket.Ticket, ticket.Comment, ticket.DurationMinutes*60, day)
+			if err := t.Api.CreateWorklog(ticket.Ticket, ticket.Comment, ticket.DurationMinutes*60, day); err != nil {
+				log.Fatal().Err(err).Msg("error whin creating worklog")
+			}
 			workedMinutes += ticket.DurationMinutes
 		}(ticket)
 	}
