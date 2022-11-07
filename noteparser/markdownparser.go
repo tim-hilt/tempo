@@ -59,6 +59,7 @@ func getTableHeaders(table ast.Node, file []byte) []string {
 
 func isTicketTable(table ast.Node, file []byte) bool {
 	headers := getTableHeaders(table, file)
+	// TODO: Table-headers could be configurable
 	return util.SlicesEqual([]string{"Ticket", "Doings", "Time spent"}, headers)
 }
 
@@ -71,7 +72,7 @@ func parseTicketEntries(ticketTable ast.Node, file []byte) ([]DailyNoteEntry, er
 			rowVals = append(rowVals, string(tableCell.Text(file)))
 			return nil
 		})
-		durationMinutes, err := calcDurationMinutes(rowVals[3])
+		durationMinutes, err := calcDurationMinutes(rowVals[2])
 
 		if err != nil {
 			return err

@@ -1,9 +1,9 @@
 package paths
 
 const (
-	prefix         = "https://jira.in-technology.de:443/rest/" // TODO: This should be configurable
-	MyselfUrl      = prefix + "api/2/myself"
-	WorklogsPrefix = prefix + "tempo-timesheets/4/worklogs"
+	prefix         = "https://jira.in-technology.de:443" // TODO: This should be configurable
+	MyselfUrl      = prefix + "/rest/api/2/myself"
+	WorklogsPrefix = prefix + "/rest/tempo-timesheets/4/worklogs"
 )
 
 func UserIdPath() string {

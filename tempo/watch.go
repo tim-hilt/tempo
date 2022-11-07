@@ -1,16 +1,18 @@
 package tempo
 
 import (
+	"context"
 	"path/filepath"
 	"regexp"
-	"sync"
 	"time"
 
 	"github.com/bep/debounce"
 	"github.com/fsnotify/fsnotify"
 	"github.com/rs/zerolog/log"
+	"github.com/tim-hilt/tempo/noteparser"
 	"github.com/tim-hilt/tempo/util"
 	"github.com/tim-hilt/tempo/util/set"
+	"golang.org/x/sync/errgroup"
 )
 
 var changedFiles = set.New[string]()
@@ -21,18 +23,16 @@ func (t *Tempo) WatchNotes() {
 		log.Fatal().Err(err).Msg("error when creating watcher")
 	}
 	defer watcher.Close()
-	var wg sync.WaitGroup
-	go t.watchLoop(watcher, &wg)
+	go t.watchLoop(watcher)
 
 	notesDir := util.GetConfigParams().Notesdir
 	addDirs(watcher, []string{notesDir})
 
-	wg.Wait()
+	<-make(chan struct{})
+	log.Fatal().Msg("main goroutine unblocked")
 }
 
-func (t Tempo) watchLoop(watcher *fsnotify.Watcher, wg *sync.WaitGroup) {
-	wg.Add(1)
-	defer wg.Done()
+func (t Tempo) watchLoop(watcher *fsnotify.Watcher) {
 	debounced := debounce.New(5 * time.Minute)
 	for {
 		select {
@@ -79,7 +79,42 @@ func (t Tempo) submitChanged() {
 	log.Info().Msg("Creating worklogs for the following files: " + changedFiles.String())
 	for _, note := range changedFiles.Items() {
 		note = filepath.Base(note)
-		t.SubmitDay(note)
+		if err := t.submit(note); err != nil {
+			log.Error().Err(err).Msg("error when submitting tickets on " + note)
+			return
+		}
 	}
+	log.Info().Msg("Finished creating worklogs")
 	changedFiles.Reset()
+}
+
+func (t Tempo) submit(note string) error {
+	ticketEntries, err := noteparser.ParseDailyNote(note)
+
+	if err != nil {
+		return err
+	}
+	if err := t.Api.DeleteWorklogs(note); err != nil {
+		return err
+	}
+
+	workedMinutes := 0
+	errs, _ := errgroup.WithContext(context.Background())
+
+	for _, ticket := range ticketEntries {
+		errs.Go(func() error {
+			if err := t.Api.CreateWorklog(ticket.Ticket, ticket.Comment, ticket.DurationMinutes*60, note); err != nil {
+				return err
+			}
+			workedMinutes += ticket.DurationMinutes
+			return nil
+		})
+	}
+	if err := errs.Wait(); err != nil {
+		return err
+	}
+
+	hours, minutes := util.Divmod(workedMinutes, util.MINUTES_IN_HOUR)
+	log.Info().Int("hours", hours).Int("minutes", minutes).Msg("successfully logged")
+	return nil
 }

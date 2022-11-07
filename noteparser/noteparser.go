@@ -16,9 +16,11 @@ type DailyNoteEntry struct {
 }
 
 func getDailyNote(day string) ([]byte, error) {
-	fileName := day + ".md"
+	if !strings.HasSuffix(day, ".md") {
+		day = day + ".md"
+	}
 	notesDir := util.GetConfigParams().Notesdir
-	fileWithPath := filepath.Join(notesDir, fileName)
+	fileWithPath := filepath.Join(notesDir, day)
 
 	file, err := os.ReadFile(fileWithPath)
 

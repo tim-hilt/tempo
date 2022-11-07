@@ -9,7 +9,7 @@ import (
 	"github.com/tim-hilt/tempo/util"
 )
 
-func (t *Tempo) SubmitDay(day string) {
+func (t Tempo) SubmitDay(day string) {
 	ticketEntries, err := noteparser.ParseDailyNote(day)
 
 	if err != nil {
