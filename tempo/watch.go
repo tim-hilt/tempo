@@ -1,9 +1,9 @@
 package tempo
 
 import (
-	"context"
 	"path/filepath"
 	"regexp"
+	"sync"
 	"time"
 
 	"github.com/bep/debounce"
@@ -12,7 +12,6 @@ import (
 	"github.com/tim-hilt/tempo/noteparser"
 	"github.com/tim-hilt/tempo/util"
 	"github.com/tim-hilt/tempo/util/set"
-	"golang.org/x/sync/errgroup"
 )
 
 var changedFiles = set.New[string]()
@@ -23,17 +22,20 @@ func (t *Tempo) WatchNotes() {
 		log.Fatal().Err(err).Msg("error when creating watcher")
 	}
 	defer watcher.Close()
-	go t.watchLoop(watcher)
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go t.watchLoop(watcher, &wg)
 
 	notesDir := util.GetConfigParams().Notesdir
 	addDirs(watcher, []string{notesDir})
 
-	<-make(chan struct{})
-	log.Fatal().Msg("main goroutine unblocked")
+	wg.Wait()
+	log.Fatal().Msg("waitgroup is finished")
 }
 
-func (t Tempo) watchLoop(watcher *fsnotify.Watcher) {
-	debounced := debounce.New(5 * time.Minute)
+func (t Tempo) watchLoop(watcher *fsnotify.Watcher, wg *sync.WaitGroup) {
+	defer wg.Done()
+	debounced := debounce.New(1 * time.Second)
 	for {
 		select {
 		case event, ok := <-watcher.Events:
@@ -99,20 +101,20 @@ func (t Tempo) submit(note string) error {
 	}
 
 	workedMinutes := 0
-	errs, _ := errgroup.WithContext(context.Background())
+	var wg sync.WaitGroup
 
 	for _, ticket := range ticketEntries {
-		errs.Go(func() error {
+		wg.Add(1)
+		go func(ticket noteparser.DailyNoteEntry) {
+			defer wg.Done()
 			if err := t.Api.CreateWorklog(ticket.Ticket, ticket.Comment, ticket.DurationMinutes*60, note); err != nil {
-				return err
+				log.Error().Err(err).Msg("error when creating worklog")
 			}
 			workedMinutes += ticket.DurationMinutes
-			return nil
-		})
+		}(ticket)
 	}
-	if err := errs.Wait(); err != nil {
-		return err
-	}
+
+	wg.Wait()
 
 	hours, minutes := util.Divmod(workedMinutes, util.MINUTES_IN_HOUR)
 	log.Info().Int("hours", hours).Int("minutes", minutes).Msg("successfully logged")

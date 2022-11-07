@@ -1,15 +1,15 @@
 package rest
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
+	"sync"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/rs/zerolog/log"
 	"github.com/tim-hilt/tempo/rest/paths"
-	"golang.org/x/sync/errgroup"
 )
 
 type Api struct {
@@ -104,14 +104,20 @@ func (a *Api) findWorklogIdsOn(day string) (*[]searchWorklogsResult, error) {
 }
 
 func (a *Api) DeleteWorklogs(day string) error {
+	day = strings.TrimSuffix(day, ".md")
 	worklogs, err := a.findWorklogIdsOn(day)
 	if err != nil {
 		return err
 	}
-	errs, _ := errgroup.WithContext(context.Background())
+	var wg sync.WaitGroup
 
 	for _, worklog := range *worklogs {
-		errs.Go(func() error {
+		// TODO: errgroups didn't work, because they don't allow to be parameterized.
+		//       error-handling is not quite possible with go-routines. I still need
+		//       a better way to solve this and handle errors on the top-level.
+		wg.Add(1)
+		go func(worklog searchWorklogsResult) {
+			defer wg.Done()
 			worklogId := fmt.Sprint(worklog.TempoWorklogId)
 			log.Info().Msg("Started deleting worklog for ticket " + worklog.Issue.Ticket +
 				" with description: " + worklog.Issue.Description)
@@ -120,17 +126,16 @@ func (a *Api) DeleteWorklogs(day string) error {
 			status := resp.StatusCode()
 
 			if err != nil {
-				return err
-			} else if status != http.StatusOK {
-				return errors.New("error when deleting worklog for ticket " + worklog.Issue.Ticket +
-					": HTTP-response was " + fmt.Sprint(status))
+				log.Error().Err(err).Msg("error when deleting worklog for ticket " + worklog.Issue.Ticket)
+			} else if status != http.StatusNoContent {
+				log.Error().Err(errors.New("HTTP-response was " + fmt.Sprint(status))).Msg("error when deleting worklog for ticket " + worklog.Issue.Ticket)
 			}
 
 			log.Info().Msg("Finished deleting worklog for ticket " + worklog.Issue.Ticket)
-			return nil
-		})
+		}(worklog)
 	}
-	return errs.Wait()
+	wg.Wait()
+	return nil
 }
 
 type worklog struct {
@@ -143,6 +148,7 @@ type worklog struct {
 
 func (a *Api) CreateWorklog(ticket string, comment string, seconds int, day string) error {
 	log.Info().Msg("Start creating worklog for " + ticket)
+	day = strings.TrimSuffix(day, ".md")
 
 	resp, err := a.client.R().
 		SetBody(worklog{Ticket: ticket, Comment: comment, Seconds: seconds, Day: day, UserId: a.UserId}).
