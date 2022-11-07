@@ -35,11 +35,13 @@ func init() {
 	rootCmd.PersistentFlags().StringP(util.USER_FLAG_VAL, "u", "", "The Jira-User")
 	rootCmd.PersistentFlags().StringP(util.PASSWORD_FLAG_VAL, "p", "", "The Password for the Jira-User")
 	rootCmd.PersistentFlags().StringP(util.NOTESDIR_FLAG_VAL, "n", "", "The directory of the daily notes")
+	rootCmd.PersistentFlags().StringP(util.HOST_FLAG_VAL, "h", "", "The host of the Jira-instance")
 
 	viper.BindPFlag(util.LOGLEVEL_CONFIG_VAL, rootCmd.PersistentFlags().Lookup(util.LOGLEVEL_FLAG_VAL))
 	viper.BindPFlag(util.USER_CONFIG_VAL, rootCmd.PersistentFlags().Lookup(util.USER_FLAG_VAL))
 	viper.BindPFlag(util.PASSWORD_CONFIG_VAL, rootCmd.PersistentFlags().Lookup(util.PASSWORD_FLAG_VAL))
 	viper.BindPFlag(util.NOTESDIR_CONFIG_VAL, rootCmd.PersistentFlags().Lookup(util.NOTESDIR_FLAG_VAL))
+	viper.BindPFlag(util.HOST_CONFIG_VAL, rootCmd.PersistentFlags().Lookup(util.HOST_FLAG_VAL))
 
 	viper.SetDefault(util.LOGLEVEL_CONFIG_VAL, 3)
 	viper.SetDefault(util.NOTESDIR_CONFIG_VAL, ".")

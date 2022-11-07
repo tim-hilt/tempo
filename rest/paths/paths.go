@@ -1,23 +1,19 @@
 package paths
 
-const (
-	prefix         = "https://jira.in-technology.de:443" // TODO: This should be configurable
-	MyselfUrl      = prefix + "/rest/api/2/myself"
-	WorklogsPrefix = prefix + "/rest/tempo-timesheets/4/worklogs"
-)
+import "github.com/tim-hilt/tempo/util"
 
 func UserIdPath() string {
-	return MyselfUrl
+	return util.GetConfigParams().JiraHost + "/rest/api/2/myself"
 }
 
 func CreateWorklogPath() string {
-	return WorklogsPrefix
+	return util.GetConfigParams().JiraHost + "/rest/tempo-timesheets/4/worklogs"
 }
 
 func FindWorklogsPath() string {
-	return WorklogsPrefix + "/search"
+	return util.GetConfigParams().JiraHost + "/rest/tempo-timesheets/4/worklogs/search"
 }
 
 func DeleteWorklogPath(worklogId string) string {
-	return WorklogsPrefix + "/" + worklogId
+	return util.GetConfigParams().JiraHost + "/rest/tempo-timesheets/4/worklogs/" + worklogId
 }
