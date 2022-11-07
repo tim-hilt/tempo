@@ -9,7 +9,5 @@ tbd.
 ## TODO
 
 - [ ] interactive command
-- [ ] struct validation
 - [ ] Unit-Tests
 - [ ] Document Usage
-- [ ] jira-host should be a configuration-parameter (Could be open-sourced afterwards)
