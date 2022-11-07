@@ -30,7 +30,7 @@ func (t Tempo) SubmitDay(day string) {
 		go func(ticket noteparser.DailyNoteEntry) {
 			defer wg.Done()
 			if err := t.Api.CreateWorklog(ticket.Ticket, ticket.Comment, ticket.DurationMinutes*60, day); err != nil {
-				log.Fatal().Err(err).Msg("error whin creating worklog")
+				log.Fatal().Err(err).Msg("error when creating worklog")
 			}
 			workedMinutes += ticket.DurationMinutes
 		}(ticket)

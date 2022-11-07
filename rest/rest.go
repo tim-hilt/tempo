@@ -50,7 +50,7 @@ func (b *Api) initUser() error {
 	}
 
 	userId := resp.Result().(*userIdResponse).UserId
-	log.Info().Msg("Finished getting userId: " + userId)
+	log.Info().Str("userId", userId).Msg("Finished getting userId")
 	b.UserId = userId
 
 	return nil
@@ -75,7 +75,7 @@ type searchWorklogsResult struct {
 }
 
 func (a *Api) FindWorklogsInRange(from string, to string) (*[]searchWorklogsResult, error) {
-	log.Info().Msg("Started searching for worklogs in range " + from + " - " + to)
+	log.Info().Str("from", from).Str("to", to).Msg("Started searching for worklogs")
 	resp, err := a.client.R().
 		SetBody(searchWorklogBody{From: from, To: to, Users: []string{a.UserId}}).
 		SetResult([]searchWorklogsResult{}).
@@ -89,7 +89,7 @@ func (a *Api) FindWorklogsInRange(from string, to string) (*[]searchWorklogsResu
 			" to " + to + ": Response was HTTP-status " + fmt.Sprint(status))
 	}
 
-	log.Info().Msg("Finished searching for worklogs in range " + from + " - " + to)
+	log.Info().Str("from", from).Str("to", to).Msg("Finished searching for worklogs")
 
 	worklogs := resp.Result().(*[]searchWorklogsResult)
 	return worklogs, nil
@@ -119,19 +119,18 @@ func (a *Api) DeleteWorklogs(day string) error {
 		go func(worklog searchWorklogsResult) {
 			defer wg.Done()
 			worklogId := fmt.Sprint(worklog.TempoWorklogId)
-			log.Info().Msg("Started deleting worklog for ticket " + worklog.Issue.Ticket +
-				" with description: " + worklog.Issue.Description)
+			log.Info().Str("ticket", worklog.Issue.Ticket).Str("description", worklog.Issue.Description).Msg("Started deleting worklog")
 
 			resp, err := a.client.R().Delete(paths.DeleteWorklogPath(worklogId))
 			status := resp.StatusCode()
 
 			if err != nil {
-				log.Error().Err(err).Msg("error when deleting worklog for ticket " + worklog.Issue.Ticket)
+				log.Error().Err(err).Str("ticket", worklog.Issue.Ticket).Msg("error when deleting worklog")
 			} else if status != http.StatusNoContent {
-				log.Error().Err(errors.New("HTTP-response was " + fmt.Sprint(status))).Msg("error when deleting worklog for ticket " + worklog.Issue.Ticket)
+				log.Error().Err(errors.New("HTTP-response was "+fmt.Sprint(status))).Str("ticket", worklog.Issue.Ticket).Msg("error when deleting worklog")
 			}
 
-			log.Info().Msg("Finished deleting worklog for ticket " + worklog.Issue.Ticket)
+			log.Info().Str("ticket", worklog.Issue.Ticket).Msg("Finished deleting worklog")
 		}(worklog)
 	}
 	wg.Wait()
@@ -147,7 +146,7 @@ type worklog struct {
 }
 
 func (a *Api) CreateWorklog(ticket string, comment string, seconds int, day string) error {
-	log.Info().Msg("Start creating worklog for " + ticket)
+	log.Info().Str("ticket", ticket).Msg("Start creating worklog")
 	day = strings.TrimSuffix(day, ".md")
 
 	resp, err := a.client.R().
@@ -161,7 +160,7 @@ func (a *Api) CreateWorklog(ticket string, comment string, seconds int, day stri
 		return errors.New("error when creating worklog for ticket " + ticket + ": HTTP-status was " + fmt.Sprint(status))
 	}
 
-	log.Info().Msg("Finished creating worklog for " + ticket)
+	log.Info().Str("ticket", ticket).Msg("Finished creating worklog")
 
 	return nil
 }

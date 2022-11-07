@@ -35,7 +35,7 @@ func (t *Tempo) WatchNotes() {
 
 func (t Tempo) watchLoop(watcher *fsnotify.Watcher, wg *sync.WaitGroup) {
 	defer wg.Done()
-	debounced := debounce.New(1 * time.Second)
+	debounced := debounce.New(5 * time.Minute)
 	for {
 		select {
 		case event, ok := <-watcher.Events:
@@ -45,7 +45,7 @@ func (t Tempo) watchLoop(watcher *fsnotify.Watcher, wg *sync.WaitGroup) {
 			}
 			modifiedFile := event.Name
 			if event.Has(fsnotify.Write) && isDailyNote(modifiedFile) {
-				log.Info().Msg("modified file:" + modifiedFile)
+				log.Info().Str("file", modifiedFile).Msg("file modification")
 				changedFiles.Add(modifiedFile)
 				debounced(t.submitChanged)
 			}
@@ -63,9 +63,9 @@ func addDirs(watcher *fsnotify.Watcher, dirs []string) {
 	for _, dir := range dirs {
 		err := watcher.Add(dir)
 		if err != nil {
-			log.Fatal().Err(err).Msg("error when adding " + dir + " to watcher")
+			log.Fatal().Err(err).Str("watchDir", dir).Msg("error when adding dir to watcher")
 		}
-		log.Info().Msg("watching directory " + dir)
+		log.Info().Str("watchDir", dir).Msg("watching directory")
 	}
 }
 
@@ -78,11 +78,11 @@ func isDailyNote(file string) bool {
 }
 
 func (t Tempo) submitChanged() {
-	log.Info().Msg("Creating worklogs for the following files: " + changedFiles.String())
+	log.Info().Strs("files", changedFiles.Items()).Msg("creating worklogs for files")
 	for _, note := range changedFiles.Items() {
 		note = filepath.Base(note)
 		if err := t.submit(note); err != nil {
-			log.Error().Err(err).Msg("error when submitting tickets on " + note)
+			log.Error().Err(err).Str("file", note).Msg("error when submitting tickets")
 			return
 		}
 	}

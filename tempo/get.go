@@ -56,7 +56,7 @@ func (t *Tempo) GetMonthlyOvertime(month string) {
 	start, err := time.Parse(util.MONTH_FORMAT, month)
 
 	if err != nil {
-		log.Fatal().Err(err).Msg("error when parsing date: " + month)
+		log.Fatal().Err(err).Str("date", month).Msg("parsing error")
 	}
 
 	end := start.AddDate(0, 1, -1)

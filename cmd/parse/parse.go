@@ -26,7 +26,7 @@ func ParseDateArg(args []string) string {
 
 func validateDate(date string) {
 	if match, _ := regexp.MatchString(`\d{4}-\d{2}-\d{2}`, date); !match {
-		log.Fatal().Msg("date isn't correctly formatted: " + date)
+		log.Fatal().Str("date", date).Msg("date isn't correctly formatted")
 	}
 }
 
@@ -45,6 +45,6 @@ func ParseMonthArg(args []string) string {
 
 func validateMonth(date string) {
 	if match, _ := regexp.MatchString(`\d{4}-\d{2}`, date); !match {
-		log.Fatal().Msg("date isn't correctly formatted: " + date)
+		log.Fatal().Str("date", date).Msg("date isn't correctly formatted")
 	}
 }
