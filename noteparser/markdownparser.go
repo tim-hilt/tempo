@@ -9,7 +9,9 @@ import (
 	"github.com/yuin/goldmark/text"
 )
 
-func applyOnChildren(parent ast.Node, kind string, fun func(child ast.Node) error) error {
+type applyFunc func(child ast.Node) error
+
+func applyOnChildren(parent ast.Node, kind string, fun applyFunc) error {
 	child := parent.FirstChild()
 	for child != nil {
 		if child.Kind().String() == kind {

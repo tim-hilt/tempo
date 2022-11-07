@@ -16,6 +16,7 @@ require (
 
 require (
 	github.com/aymanbagabas/go-osc52 v1.2.1 // indirect
+	github.com/bep/debounce v1.2.1 // indirect
 	github.com/containerd/console v1.0.3 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect

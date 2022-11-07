@@ -19,15 +19,6 @@ func getDailyNote(day string) ([]byte, error) {
 	fileName := day + ".md"
 	notesDir := util.GetConfigParams().Notesdir
 	fileWithPath := filepath.Join(notesDir, fileName)
-	if strings.HasPrefix(fileWithPath, "~") {
-		home, err := os.UserHomeDir()
-
-		if err != nil {
-			return nil, err
-		}
-
-		fileWithPath = filepath.Join(home, fileWithPath[1:])
-	}
 
 	file, err := os.ReadFile(fileWithPath)
 
