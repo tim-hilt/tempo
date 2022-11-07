@@ -16,9 +16,8 @@ var watchCmd = &cobra.Command{
 }
 
 func watch(cmd *cobra.Command, args []string) {
-	params := config.GetConfigParams()
-	tempoClient := tempo.New(params.User, params.Password)
-
+	user, password := config.GetCredentials()
+	tempoClient := tempo.New(user, password)
 	tempoClient.WatchNotes()
 }
 

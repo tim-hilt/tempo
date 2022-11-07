@@ -11,7 +11,7 @@ import (
 
 func Init() {
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339})
-	loglevel := config.GetConfigParams().Loglevel
+	loglevel := config.GetLoglevel()
 	setLoglevel(loglevel)
 }
 

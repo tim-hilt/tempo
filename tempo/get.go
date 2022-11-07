@@ -81,7 +81,7 @@ func (t *Tempo) GetMonthlyOvertime(month string) {
 	}
 
 	workedHours := workedSeconds / util.MINUTES_IN_HOUR / util.SECONDS_IN_MINUTE
-	dailyWorkhours := config.GetConfigParams().DailyWorkhours
+	dailyWorkhours := config.GetWorkhours()
 	overtime := workedHours - float64(len(daysWorked)*dailyWorkhours)
 
 	fmt.Println("Overtime for " + month + ": " + fmt.Sprint(overtime) + " hours")

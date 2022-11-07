@@ -20,7 +20,7 @@ var monthlyHoursCmd = &cobra.Command{
 }
 
 func monthlyHours(cmd *cobra.Command, args []string) {
-	params := config.GetConfigParams()
-	tempoClient := tempo.New(params.User, params.Password)
+	user, password := config.GetCredentials()
+	tempoClient := tempo.New(user, password)
 	tempoClient.GetMonthlyHours()
 }

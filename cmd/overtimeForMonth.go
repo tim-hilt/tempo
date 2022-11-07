@@ -20,8 +20,8 @@ var overtimeForMonthCmd = &cobra.Command{
 func overtimeForMonth(cmd *cobra.Command, args []string) {
 	month := parse.ParseMonthArg(args)
 
-	params := config.GetConfigParams()
-	tempoClient := tempo.New(params.User, params.Password)
+	user, password := config.GetCredentials()
+	tempoClient := tempo.New(user, password)
 	tempoClient.GetMonthlyOvertime(month)
 }
 

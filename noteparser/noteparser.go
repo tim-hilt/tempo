@@ -19,7 +19,7 @@ func getDailyNote(day string) ([]byte, error) {
 	if !strings.HasSuffix(day, ".md") {
 		day = day + ".md"
 	}
-	notesDir := config.GetConfigParams().Notesdir
+	notesDir := config.GetNotesdir()
 	fileWithPath := filepath.Join(notesDir, day)
 
 	file, err := os.ReadFile(fileWithPath)

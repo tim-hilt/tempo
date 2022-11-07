@@ -27,7 +27,7 @@ func (t *Tempo) WatchNotes() {
 	wg.Add(1)
 	go t.watchLoop(watcher, &wg)
 
-	notesDir := config.GetConfigParams().Notesdir
+	notesDir := config.GetNotesdir()
 	addDirs(watcher, []string{notesDir})
 
 	wg.Wait()
