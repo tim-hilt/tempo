@@ -86,7 +86,7 @@ func (t Tempo) submitChanged() {
 			return
 		}
 	}
-	log.Info().Msg("Finished creating worklogs")
+	log.Info().Msg("finished creating worklogs")
 	changedFiles.Reset()
 }
 
