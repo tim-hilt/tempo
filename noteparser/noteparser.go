@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/tim-hilt/tempo/util"
+	"github.com/tim-hilt/tempo/util/config"
 )
 
 type DailyNoteEntry struct {
@@ -19,7 +19,7 @@ func getDailyNote(day string) ([]byte, error) {
 	if !strings.HasSuffix(day, ".md") {
 		day = day + ".md"
 	}
-	notesDir := util.GetConfigParams().Notesdir
+	notesDir := config.GetConfigParams().Notesdir
 	fileWithPath := filepath.Join(notesDir, day)
 
 	file, err := os.ReadFile(fileWithPath)

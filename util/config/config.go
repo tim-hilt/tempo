@@ -1,4 +1,4 @@
-package util
+package config
 
 import (
 	"os"
@@ -28,12 +28,24 @@ func GetConfigParams() configParams {
 		Loglevel:       viper.GetInt(LOGLEVEL_CONFIG_VAL),
 		DailyWorkhours: viper.GetInt(DAILYWORKHOURS_CONFIG_VAL),
 	}
-	var validate *validator.Validate
+	return config
+}
+
+func Validate() {
+	notesDir := formatNotesDir(viper.GetString(NOTESDIR_CONFIG_VAL))
+	config := configParams{
+		User:           viper.GetString(USER_CONFIG_VAL),
+		Password:       viper.GetString(PASSWORD_CONFIG_VAL),
+		JiraHost:       viper.GetString(HOST_CONFIG_VAL),
+		Notesdir:       notesDir,
+		Loglevel:       viper.GetInt(LOGLEVEL_CONFIG_VAL),
+		DailyWorkhours: viper.GetInt(DAILYWORKHOURS_CONFIG_VAL),
+	}
+	validate := validator.New()
 	err := validate.Struct(config)
 	if err != nil {
 		log.Fatal().Err(err).Msg("error when validating config-params")
 	}
-	return config
 }
 
 func formatNotesDir(notesDir string) string {

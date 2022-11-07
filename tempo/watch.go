@@ -11,6 +11,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/tim-hilt/tempo/noteparser"
 	"github.com/tim-hilt/tempo/util"
+	"github.com/tim-hilt/tempo/util/config"
 	"github.com/tim-hilt/tempo/util/set"
 )
 
@@ -26,7 +27,7 @@ func (t *Tempo) WatchNotes() {
 	wg.Add(1)
 	go t.watchLoop(watcher, &wg)
 
-	notesDir := util.GetConfigParams().Notesdir
+	notesDir := config.GetConfigParams().Notesdir
 	addDirs(watcher, []string{notesDir})
 
 	wg.Wait()

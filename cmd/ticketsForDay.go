@@ -4,7 +4,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/tim-hilt/tempo/cmd/parse"
 	"github.com/tim-hilt/tempo/tempo"
-	"github.com/tim-hilt/tempo/util"
+	"github.com/tim-hilt/tempo/util/config"
 )
 
 // ticketsForDayCmd represents the ticketsForDay command
@@ -19,7 +19,7 @@ var ticketsForDayCmd = &cobra.Command{
 func ticketsForDay(cmd *cobra.Command, args []string) {
 	date := parse.ParseDateArg(args)
 
-	params := util.GetConfigParams()
+	params := config.GetConfigParams()
 	tempoClient := tempo.New(params.User, params.Password)
 
 	tempoClient.GetTicketsForDay(date)

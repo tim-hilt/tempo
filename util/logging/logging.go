@@ -6,12 +6,12 @@ import (
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"github.com/tim-hilt/tempo/util"
+	"github.com/tim-hilt/tempo/util/config"
 )
 
 func Init() {
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339})
-	loglevel := util.GetConfigParams().Loglevel
+	loglevel := config.GetConfigParams().Loglevel
 	setLoglevel(loglevel)
 }
 

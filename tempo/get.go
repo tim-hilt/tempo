@@ -8,6 +8,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/tim-hilt/tempo/cli/tablecomponent"
 	"github.com/tim-hilt/tempo/util"
+	"github.com/tim-hilt/tempo/util/config"
 )
 
 // TODO: Could also pass month as arg as in overtime-func below
@@ -80,7 +81,7 @@ func (t *Tempo) GetMonthlyOvertime(month string) {
 	}
 
 	workedHours := workedSeconds / util.MINUTES_IN_HOUR / util.SECONDS_IN_MINUTE
-	dailyWorkhours := util.GetConfigParams().DailyWorkhours
+	dailyWorkhours := config.GetConfigParams().DailyWorkhours
 	overtime := workedHours - float64(len(daysWorked)*dailyWorkhours)
 
 	fmt.Println("Overtime for " + month + ": " + fmt.Sprint(overtime) + " hours")

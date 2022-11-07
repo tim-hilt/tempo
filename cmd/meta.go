@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/tim-hilt/tempo/util"
+	"github.com/tim-hilt/tempo/util/config"
 	"github.com/tim-hilt/tempo/util/logging"
 )
 
@@ -29,22 +29,22 @@ func Execute() {
 }
 
 func init() {
-	cobra.OnInitialize(initConfig, logging.Init)
+	cobra.OnInitialize(initConfig, logging.Init, config.Validate)
 
-	rootCmd.PersistentFlags().IntP(util.LOGLEVEL_FLAG_VAL, "l", 0, "Logging-level, -1 (trace) to 5 (panic)")
-	rootCmd.PersistentFlags().StringP(util.USER_FLAG_VAL, "u", "", "The Jira-User")
-	rootCmd.PersistentFlags().StringP(util.PASSWORD_FLAG_VAL, "p", "", "The Password for the Jira-User")
-	rootCmd.PersistentFlags().StringP(util.NOTESDIR_FLAG_VAL, "n", "", "The directory of the daily notes")
-	rootCmd.PersistentFlags().StringP(util.HOST_FLAG_VAL, "h", "", "The host of the Jira-instance")
+	rootCmd.PersistentFlags().IntP(config.LOGLEVEL_FLAG_VAL, "l", 0, "Logging-level, -1 (trace) to 5 (panic)")
+	rootCmd.PersistentFlags().StringP(config.USER_FLAG_VAL, "u", "", "The Jira-User")
+	rootCmd.PersistentFlags().StringP(config.PASSWORD_FLAG_VAL, "p", "", "The Password for the Jira-User")
+	rootCmd.PersistentFlags().StringP(config.NOTESDIR_FLAG_VAL, "n", "", "The directory of the daily notes")
+	rootCmd.PersistentFlags().String(config.HOST_FLAG_VAL, "", "The host of the Jira-instance")
 
-	viper.BindPFlag(util.LOGLEVEL_CONFIG_VAL, rootCmd.PersistentFlags().Lookup(util.LOGLEVEL_FLAG_VAL))
-	viper.BindPFlag(util.USER_CONFIG_VAL, rootCmd.PersistentFlags().Lookup(util.USER_FLAG_VAL))
-	viper.BindPFlag(util.PASSWORD_CONFIG_VAL, rootCmd.PersistentFlags().Lookup(util.PASSWORD_FLAG_VAL))
-	viper.BindPFlag(util.NOTESDIR_CONFIG_VAL, rootCmd.PersistentFlags().Lookup(util.NOTESDIR_FLAG_VAL))
-	viper.BindPFlag(util.HOST_CONFIG_VAL, rootCmd.PersistentFlags().Lookup(util.HOST_FLAG_VAL))
+	viper.BindPFlag(config.LOGLEVEL_CONFIG_VAL, rootCmd.PersistentFlags().Lookup(config.LOGLEVEL_FLAG_VAL))
+	viper.BindPFlag(config.USER_CONFIG_VAL, rootCmd.PersistentFlags().Lookup(config.USER_FLAG_VAL))
+	viper.BindPFlag(config.PASSWORD_CONFIG_VAL, rootCmd.PersistentFlags().Lookup(config.PASSWORD_FLAG_VAL))
+	viper.BindPFlag(config.NOTESDIR_CONFIG_VAL, rootCmd.PersistentFlags().Lookup(config.NOTESDIR_FLAG_VAL))
+	viper.BindPFlag(config.HOST_CONFIG_VAL, rootCmd.PersistentFlags().Lookup(config.HOST_FLAG_VAL))
 
-	viper.SetDefault(util.LOGLEVEL_CONFIG_VAL, 3)
-	viper.SetDefault(util.NOTESDIR_CONFIG_VAL, ".")
+	viper.SetDefault(config.LOGLEVEL_CONFIG_VAL, 3)
+	viper.SetDefault(config.NOTESDIR_CONFIG_VAL, ".")
 }
 
 func initConfig() {

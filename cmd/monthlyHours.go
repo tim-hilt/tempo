@@ -3,7 +3,7 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 	"github.com/tim-hilt/tempo/tempo"
-	"github.com/tim-hilt/tempo/util"
+	"github.com/tim-hilt/tempo/util/config"
 )
 
 func init() {
@@ -20,7 +20,7 @@ var monthlyHoursCmd = &cobra.Command{
 }
 
 func monthlyHours(cmd *cobra.Command, args []string) {
-	params := util.GetConfigParams()
+	params := config.GetConfigParams()
 	tempoClient := tempo.New(params.User, params.Password)
 	tempoClient.GetMonthlyHours()
 }
