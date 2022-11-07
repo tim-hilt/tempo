@@ -14,8 +14,8 @@ type configParams struct {
 	Password       string `validate:"required"`
 	Notesdir       string `validate:"required"`
 	JiraHost       string `validate:"required"`
-	Loglevel       int    `validate:""`
-	DailyWorkhours int
+	Loglevel       int    `validate:"gte=-1,lte=5"`
+	DailyWorkhours int    `validate:"gte=0,lte=10"`
 }
 
 func GetCredentials() (string, string) {
