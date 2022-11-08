@@ -7,3 +7,4 @@ RUN go mod download && go mod verify
 
 COPY . .
 RUN go build -v ./...
+RUN go test
