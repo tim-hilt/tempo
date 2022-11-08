@@ -1,4 +1,4 @@
-# Book
+# Tempo
 
 A cli to manage bookings with the Tempo-API
 
@@ -8,6 +8,6 @@ tbd.
 
 ## TODO
 
-- [ ] interactive command
-- [ ] Unit-Tests
-- [ ] Document Usage
+- Interactive Command
+- More Unit-Tests
+- Document Usage

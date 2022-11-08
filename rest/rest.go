@@ -68,18 +68,18 @@ type issue struct {
 	Description string `json:"summary"`
 }
 
-type searchWorklogsResult struct {
+type SearchWorklogsResult struct {
 	TempoWorklogId  int    `json:"tempoWorklogId"`
 	DurationSeconds int    `json:"timeSpentSeconds"`
 	Issue           issue  `json:"issue"`
 	Date            string `json:"started"`
 }
 
-func (a *Api) FindWorklogsInRange(from string, to string) (*[]searchWorklogsResult, error) {
+func (a *Api) FindWorklogsInRange(from string, to string) (*[]SearchWorklogsResult, error) {
 	log.Info().Str("from", from).Str("to", to).Msg("started searching for worklogs")
 	resp, err := a.client.R().
 		SetBody(searchWorklogBody{From: from, To: to, Users: []string{a.UserId}}).
-		SetResult([]searchWorklogsResult{}).
+		SetResult([]SearchWorklogsResult{}).
 		Post(paths.FindWorklogsPath())
 	status := resp.StatusCode()
 
@@ -92,11 +92,11 @@ func (a *Api) FindWorklogsInRange(from string, to string) (*[]searchWorklogsResu
 
 	log.Info().Str("from", from).Str("to", to).Msg("finished searching for worklogs")
 
-	worklogs := resp.Result().(*[]searchWorklogsResult)
+	worklogs := resp.Result().(*[]SearchWorklogsResult)
 	return worklogs, nil
 }
 
-func (a *Api) findWorklogIdsOn(day string) (*[]searchWorklogsResult, error) {
+func (a *Api) findWorklogIdsOn(day string) (*[]SearchWorklogsResult, error) {
 	worklogs, err := a.FindWorklogsInRange(day, day)
 	if err != nil {
 		return nil, err

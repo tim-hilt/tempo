@@ -9,6 +9,12 @@ import (
 	"github.com/spf13/viper"
 )
 
+type columns struct {
+	Tickets   string `validate:"required"`
+	Comments  string `validate:"required"`
+	Durations string `validate:"required"`
+}
+
 type configParams struct {
 	User           string `validate:"required"`
 	Password       string `validate:"required"`
@@ -16,6 +22,7 @@ type configParams struct {
 	JiraHost       string `validate:"required,url"`
 	Loglevel       int    `validate:"gte=-1,lte=5"`
 	DailyWorkhours int    `validate:"gte=0,lte=10"`
+	Columns        columns
 }
 
 func GetCredentials() (string, string) {
@@ -46,6 +53,14 @@ func GetLoglevel() int {
 	return viper.GetInt(LOGLEVEL_CONFIG_VAL)
 }
 
+func GetColumns() columns {
+	return columns{
+		Tickets:   viper.GetString(TICKETS_COLUMN_CONFIG_VAL),
+		Comments:  viper.GetString(COMMENTS_COLUMN_CONFIG_VAL),
+		Durations: viper.GetString(DURATIONS_COLUMN_CONFIG_VAL),
+	}
+}
+
 func Validate() {
 	user, password := GetCredentials()
 	config := configParams{
@@ -55,6 +70,7 @@ func Validate() {
 		Notesdir:       GetNotesdir(),
 		Loglevel:       GetLoglevel(),
 		DailyWorkhours: GetWorkhours(),
+		Columns:        GetColumns(),
 	}
 	validate := validator.New()
 	err := validate.Struct(config)

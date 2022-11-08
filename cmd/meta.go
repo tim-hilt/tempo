@@ -18,7 +18,7 @@ var rootCmd = &cobra.Command{
 	Run:   root,
 }
 
-// TODO: Add watch- or interactive command here
+// TODO: Add interactive command here
 func root(cmd *cobra.Command, args []string) {}
 
 func Execute() {
@@ -45,6 +45,9 @@ func init() {
 
 	viper.SetDefault(config.LOGLEVEL_CONFIG_VAL, 3)
 	viper.SetDefault(config.NOTESDIR_CONFIG_VAL, ".")
+	viper.SetDefault(config.TICKETS_COLUMN_CONFIG_VAL, "Ticket")
+	viper.SetDefault(config.COMMENTS_COLUMN_CONFIG_VAL, "Comment")
+	viper.SetDefault(config.DURATIONS_COLUMN_CONFIG_VAL, "Duration")
 }
 
 func initConfig() {

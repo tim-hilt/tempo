@@ -2,7 +2,8 @@ package noteparser
 
 import (
 	"github.com/rs/zerolog/log"
-	"github.com/tim-hilt/tempo/util"
+	"github.com/tim-hilt/tempo/util/config"
+	"github.com/tim-hilt/tempo/util/set"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/extension"
@@ -25,8 +26,6 @@ func applyOnChildren(parent ast.Node, kind string, fun applyFunc) error {
 	return nil
 }
 
-// TODO: Could implement interface that has to be satisfied in order to
-// add parsers for more file-formats
 func findTicketTable(file []byte) ast.Node {
 	document := goldmark.New(goldmark.WithExtensions(extension.Table)).
 		Parser().Parse(text.NewReader(file))
@@ -45,11 +44,11 @@ func findTicketTable(file []byte) ast.Node {
 	return ticketTable
 }
 
-func getTableHeaders(table ast.Node, file []byte) []string {
-	headers := []string{}
+func getTableHeaders(table ast.Node, file []byte) set.Set[string] {
+	headers := set.New[string]()
 	applyOnChildren(table, "TableHeader", func(tableRow ast.Node) error {
 		applyOnChildren(tableRow, "TableCell", func(tableCell ast.Node) error {
-			headers = append(headers, string(tableCell.Text(file)))
+			headers.Add(string(tableCell.Text(file)))
 			return nil
 		})
 		return nil
@@ -59,8 +58,13 @@ func getTableHeaders(table ast.Node, file []byte) []string {
 
 func isTicketTable(table ast.Node, file []byte) bool {
 	headers := getTableHeaders(table, file)
-	// TODO: Table-headers could be configurable
-	return util.SlicesEqual([]string{"Ticket", "Doings", "Time spent"}, headers)
+	columns := config.GetColumns()
+	for _, column := range []string{columns.Tickets, columns.Comments, columns.Durations} {
+		if !headers.Contains(column) {
+			return false
+		}
+	}
+	return true
 }
 
 func parseTicketEntries(ticketTable ast.Node, file []byte) ([]DailyNoteEntry, error) {

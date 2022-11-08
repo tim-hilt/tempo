@@ -7,20 +7,28 @@ import (
 	"github.com/charmbracelet/bubbles/table"
 	"github.com/rs/zerolog/log"
 	"github.com/tim-hilt/tempo/cli/tablecomponent"
+	"github.com/tim-hilt/tempo/rest"
 	"github.com/tim-hilt/tempo/util"
 	"github.com/tim-hilt/tempo/util/config"
 )
 
-// TODO: Could also pass month as arg as in overtime-func below
-func (t *Tempo) GetMonthlyHours() {
-	now := time.Now()
-	start := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.Local)
+func (t Tempo) boilerPlate(month string) *[]rest.SearchWorklogsResult {
+	start, err := time.Parse(util.MONTH_FORMAT, month)
+
+	if err != nil {
+		log.Fatal().Err(err).Str("date", month).Msg("parsing error")
+	}
 	end := start.AddDate(0, 1, -1)
 	worklogs, err := t.Api.FindWorklogsInRange(start.Format(util.DATE_FORMAT), end.Format(util.DATE_FORMAT))
 
 	if err != nil {
 		log.Fatal().Err(err).Msg("error when searching for worklogs")
 	}
+	return worklogs
+}
+
+func (t *Tempo) GetMonthlyHours(month string) {
+	worklogs := t.boilerPlate(month)
 
 	bookedTimeSeconds := 0
 	for _, worklog := range *worklogs {
@@ -28,7 +36,7 @@ func (t *Tempo) GetMonthlyHours() {
 	}
 
 	hours, minutes := util.Divmod(bookedTimeSeconds/util.SECONDS_IN_MINUTE, util.MINUTES_IN_HOUR)
-	fmt.Println("Worked hours for " + start.Format(util.MONTH_FORMAT) + ": " +
+	fmt.Println("Worked hours for " + month + ": " +
 		fmt.Sprintf("%02d", hours) + ":" + fmt.Sprintf("%02d", minutes))
 }
 
@@ -54,18 +62,7 @@ func (t *Tempo) GetTicketsForDay(day string) {
 
 // TODO: Doesn't work for days that are used to bring down overtime
 func (t *Tempo) GetMonthlyOvertime(month string) {
-	start, err := time.Parse(util.MONTH_FORMAT, month)
-
-	if err != nil {
-		log.Fatal().Err(err).Str("date", month).Msg("parsing error")
-	}
-
-	end := start.AddDate(0, 1, -1)
-	worklogs, err := t.Api.FindWorklogsInRange(start.Format(util.DATE_FORMAT), end.Format(util.DATE_FORMAT))
-
-	if err != nil {
-		log.Fatal().Err(err).Msg("error when searching for worklogs")
-	}
+	worklogs := t.boilerPlate(month)
 
 	var workedSeconds float64 = 0
 	daysWorked := []string{}
