@@ -1,6 +1,8 @@
 package tempo
 
 import (
+	"os"
+	"os/signal"
 	"path/filepath"
 	"regexp"
 	"sync"
@@ -29,6 +31,15 @@ func (t *Tempo) WatchNotes() {
 
 	notesDir := config.GetNotesdir()
 	addDirs(watcher, []string{notesDir})
+
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	go func() {
+		for sig := range c {
+			log.Info().Str("signal", sig.String()).Msg("Application was quit")
+			os.Exit(0)
+		}
+	}()
 
 	wg.Wait()
 	log.Fatal().Msg("waitgroup is finished")
