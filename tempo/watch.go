@@ -1,33 +1,39 @@
 package tempo
 
 import (
+	"context"
+	"errors"
 	"os"
 	"os/signal"
 	"path/filepath"
 	"regexp"
-	"sync"
 	"time"
 
 	"github.com/bep/debounce"
 	"github.com/fsnotify/fsnotify"
 	"github.com/rs/zerolog/log"
-	"github.com/tim-hilt/tempo/noteparser"
-	"github.com/tim-hilt/tempo/util"
 	"github.com/tim-hilt/tempo/util/config"
 	"github.com/tim-hilt/tempo/util/set"
+	"golang.org/x/sync/errgroup"
 )
 
-var changedFiles = set.New[string]()
+var (
+	changedFiles = set.New[string]()
+	watcher      *fsnotify.Watcher
+)
 
-func (t *Tempo) WatchNotes() {
-	watcher, err := fsnotify.NewWatcher()
+func init() {
+	var err error
+	watcher, err = fsnotify.NewWatcher()
 	if err != nil {
 		log.Fatal().Err(err).Msg("error when creating watcher")
 	}
+}
+
+func (t *Tempo) WatchNotes() {
 	defer watcher.Close()
-	var wg sync.WaitGroup
-	wg.Add(1)
-	go t.watchLoop(watcher, &wg)
+	errs, _ := errgroup.WithContext(context.Background())
+	errs.Go(t.watchLoop)
 
 	notesDir := config.GetNotesdir()
 	addDirs(watcher, []string{notesDir})
@@ -41,19 +47,18 @@ func (t *Tempo) WatchNotes() {
 		}
 	}()
 
-	wg.Wait()
-	log.Fatal().Msg("waitgroup is finished")
+	if err := errs.Wait(); err != nil {
+		log.Fatal().Err(err).Msg("main loop exited with error")
+	}
 }
 
-func (t Tempo) watchLoop(watcher *fsnotify.Watcher, wg *sync.WaitGroup) {
-	defer wg.Done()
+func (t Tempo) watchLoop() error {
 	debounced := debounce.New(5 * time.Minute)
 	for {
 		select {
 		case event, ok := <-watcher.Events:
 			if !ok {
-				log.Fatal().Msg("event not ok!")
-				return
+				return errors.New("event not ok")
 			}
 			modifiedFile := event.Name
 			if event.Has(fsnotify.Write) && isDailyNote(modifiedFile) {
@@ -63,8 +68,7 @@ func (t Tempo) watchLoop(watcher *fsnotify.Watcher, wg *sync.WaitGroup) {
 			}
 		case err, ok := <-watcher.Errors:
 			if !ok {
-				log.Fatal().Msg("error not ok!")
-				return
+				return errors.New("error not ok")
 			}
 			log.Error().Err(err).Msg("error on channel \"errors\"")
 		}
@@ -108,35 +112,4 @@ func (t Tempo) submitChanged() {
 		Strs("files", changedFiles.Items()).
 		Msg("finished creating worklogs")
 	changedFiles.Reset()
-}
-
-func (t Tempo) submit(note string) error {
-	ticketEntries, err := noteparser.ParseDailyNote(note)
-
-	if err != nil {
-		return err
-	}
-	if err := t.Api.DeleteWorklogs(note); err != nil {
-		return err
-	}
-
-	workedMinutes := 0
-	var wg sync.WaitGroup
-
-	for _, ticket := range ticketEntries {
-		wg.Add(1)
-		go func(ticket noteparser.DailyNoteEntry) {
-			defer wg.Done()
-			if err := t.Api.CreateWorklog(ticket.Ticket, ticket.Comment, ticket.DurationMinutes*60, note); err != nil {
-				log.Error().Err(err).Msg("error when creating worklog")
-			}
-			workedMinutes += ticket.DurationMinutes
-		}(ticket)
-	}
-
-	wg.Wait()
-
-	hours, minutes := util.Divmod(workedMinutes, util.MINUTES_IN_HOUR)
-	log.Info().Int("hours", hours).Int("minutes", minutes).Msg("successfully logged")
-	return nil
 }

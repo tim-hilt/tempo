@@ -1,15 +1,16 @@
 package rest
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
 	"strings"
-	"sync"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/rs/zerolog/log"
 	"github.com/tim-hilt/tempo/rest/paths"
+	"golang.org/x/sync/errgroup"
 )
 
 type Api struct {
@@ -109,15 +110,11 @@ func (a *Api) DeleteWorklogs(day string) error {
 	if err != nil {
 		return err
 	}
-	var wg sync.WaitGroup
+	errs, _ := errgroup.WithContext(context.Background())
 
 	for _, worklog := range *worklogs {
-		// TODO: errgroups didn't work, because they don't allow to be parameterized.
-		//       error-handling is not quite possible with go-routines. I still need
-		//       a better way to solve this and handle errors on the top-level.
-		wg.Add(1)
-		go func(worklog searchWorklogsResult) {
-			defer wg.Done()
+		worklog := worklog // Necessary as of https://go.dev/doc/faq#closures_and_goroutines
+		errs.Go(func() error {
 			worklogId := fmt.Sprint(worklog.TempoWorklogId)
 			log.Info().Str("ticket", worklog.Issue.Ticket).Str("description", worklog.Issue.Description).Msg("started deleting worklog")
 
@@ -125,16 +122,16 @@ func (a *Api) DeleteWorklogs(day string) error {
 			status := resp.StatusCode()
 
 			if err != nil {
-				log.Error().Err(err).Str("ticket", worklog.Issue.Ticket).Msg("error when deleting worklog")
+				return err
 			} else if status != http.StatusNoContent {
-				log.Error().Err(errors.New("HTTP-response was "+fmt.Sprint(status))).Str("ticket", worklog.Issue.Ticket).Msg("error when deleting worklog")
+				return errors.New("HTTP-response was " + fmt.Sprint(status))
 			}
 
 			log.Info().Str("ticket", worklog.Issue.Ticket).Msg("finished deleting worklog")
-		}(worklog)
+			return nil
+		})
 	}
-	wg.Wait()
-	return nil
+	return errs.Wait()
 }
 
 type worklog struct {

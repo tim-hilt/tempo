@@ -1,44 +1,50 @@
 package tempo
 
 import (
-	"fmt"
-	"sync"
+	"context"
 
 	"github.com/rs/zerolog/log"
 	"github.com/tim-hilt/tempo/noteparser"
 	"github.com/tim-hilt/tempo/util"
+	"golang.org/x/sync/errgroup"
 )
 
 func (t Tempo) SubmitDay(day string) {
-	ticketEntries, err := noteparser.ParseDailyNote(day)
+	if err := t.submit(day); err != nil {
+		log.Fatal().Err(err).Str("day", day).Msg("error when submitting")
+	}
+}
+
+func (t Tempo) submit(note string) error {
+	ticketEntries, err := noteparser.ParseDailyNote(note)
 
 	if err != nil {
-		log.Fatal().Err(err).Msg("error when parsing daily note")
+		return err
 	}
 
-	// Clean up first
-	if err := t.Api.DeleteWorklogs(day); err != nil {
-		log.Fatal().Err(err).Msg("error when deleting worklogs")
+	if err := t.Api.DeleteWorklogs(note); err != nil {
+		return err
 	}
 
-	// ...then book on clean state
 	workedMinutes := 0
-	var wg sync.WaitGroup
+	errs, _ := errgroup.WithContext(context.Background())
 
 	for _, ticket := range ticketEntries {
-		wg.Add(1)
-		go func(ticket noteparser.DailyNoteEntry) {
-			defer wg.Done()
-			if err := t.Api.CreateWorklog(ticket.Ticket, ticket.Comment, ticket.DurationMinutes*60, day); err != nil {
-				log.Fatal().Err(err).Msg("error when creating worklog")
+		ticket := ticket // Necessary as of https://go.dev/doc/faq#closures_and_goroutines
+		errs.Go(func() error {
+			if err := t.Api.CreateWorklog(ticket.Ticket, ticket.Comment, ticket.DurationMinutes*60, note); err != nil {
+				return err
 			}
 			workedMinutes += ticket.DurationMinutes
-		}(ticket)
+			return nil
+		})
 	}
 
-	wg.Wait()
+	if err := errs.Wait(); err != nil {
+		return err
+	}
 
 	hours, minutes := util.Divmod(workedMinutes, util.MINUTES_IN_HOUR)
-	fmt.Println("successfully logged " + fmt.Sprintf("%02d", hours) + " hours and " +
-		fmt.Sprintf("%02d", minutes) + " minutes on " + day)
+	log.Info().Int("hours", hours).Int("minutes", minutes).Msg("successfully logged")
+	return nil
 }
