@@ -32,14 +32,18 @@ func getDailyNote(day string) ([]byte, error) {
 }
 
 func calcDurationMinutes(duration string) (int, error) {
-	foo := strings.Split(duration, ":")
-	hours, err := strconv.Atoi(foo[0])
+	if duration == "" {
+		return 0, nil
+	}
+
+	minutesHours := strings.Split(duration, ":")
+	hours, err := strconv.Atoi(minutesHours[0])
 
 	if err != nil {
 		return -1, err
 	}
 
-	minutes, err := strconv.Atoi(foo[1])
+	minutes, err := strconv.Atoi(minutesHours[1])
 
 	if err != nil {
 		return -1, err
