@@ -79,15 +79,23 @@ func isDailyNote(file string) bool {
 }
 
 func (t Tempo) submitChanged() {
-	log.Info().Strs("files", changedFiles.Items()).Msg("creating worklogs for files")
+	log.Info().
+		Strs("files", changedFiles.Items()).
+		Msg("creating worklogs for files")
 	for _, note := range changedFiles.Items() {
 		note = filepath.Base(note)
 		if err := t.submit(note); err != nil {
-			log.Error().Err(err).Str("file", note).Msg("error when submitting tickets")
+			log.Error().
+				Err(err).
+				Str("file", note).
+				Strs("files", changedFiles.Items()).
+				Msg("error when submitting tickets")
 			return
 		}
 	}
-	log.Info().Msg("finished creating worklogs")
+	log.Info().
+		Strs("files", changedFiles.Items()).
+		Msg("finished creating worklogs")
 	changedFiles.Reset()
 }
 
