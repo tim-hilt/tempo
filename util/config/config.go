@@ -12,7 +12,7 @@ import (
 type configParams struct {
 	User           string `validate:"required"`
 	Password       string `validate:"required"`
-	Notesdir       string `validate:"required"`
+	Notesdir       string `validate:"required,dir"`
 	JiraHost       string `validate:"required,url"`
 	Loglevel       int    `validate:"gte=-1,lte=5"`
 	DailyWorkhours int    `validate:"gte=0,lte=10"`
