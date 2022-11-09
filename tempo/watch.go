@@ -27,7 +27,9 @@ func init() {
 	var err error
 	watcher, err = fsnotify.NewWatcher()
 	if err != nil {
-		log.Fatal().Err(err).Msg("error when creating watcher")
+		log.Fatal().
+			Err(err).
+			Msg("error when creating watcher")
 	}
 }
 
@@ -43,13 +45,17 @@ func (t *Tempo) WatchNotes() {
 	signal.Notify(c, os.Interrupt)
 	go func() {
 		for sig := range c {
-			log.Info().Str("signal", sig.String()).Msg("Application was quit")
+			log.Info().
+				Str("signal", sig.String()).
+				Msg("Application was quit")
 			os.Exit(0)
 		}
 	}()
 
 	if err := errs.Wait(); err != nil {
-		log.Fatal().Err(err).Msg("main loop exited with error")
+		log.Fatal().
+			Err(err).
+			Msg("main loop exited with error")
 	}
 }
 
@@ -64,7 +70,9 @@ func (t Tempo) watchLoop() error {
 			}
 			modifiedFile := event.Name
 			if event.Has(fsnotify.Write) && isDailyNote(modifiedFile) {
-				log.Info().Str("file", modifiedFile).Msg("file modification")
+				log.Info().
+					Str("file", modifiedFile).
+					Msg("file modification")
 				// use debounce if file not set or same file edited
 				if changedFile == util.NO_CHANGED_FILES || changedFile == modifiedFile {
 					changedFile = modifiedFile
@@ -87,7 +95,9 @@ func (t Tempo) watchLoop() error {
 			if !ok {
 				return errors.New("error not ok")
 			}
-			log.Error().Err(err).Msg("error on channel \"errors\"")
+			log.Error().
+				Err(err).
+				Msg("error on channel \"errors\"")
 		}
 	}
 }
@@ -96,9 +106,14 @@ func addDirs(watcher *fsnotify.Watcher, dirs []string) {
 	for _, dir := range dirs {
 		err := watcher.Add(dir)
 		if err != nil {
-			log.Fatal().Err(err).Str("watchDir", dir).Msg("error when adding dir to watcher")
+			log.Fatal().
+				Err(err).
+				Str("watchDir", dir).
+				Msg("error when adding dir to watcher")
 		}
-		log.Info().Str("watchDir", dir).Msg("watching directory")
+		log.Info().
+			Str("watchDir", dir).
+			Msg("watching directory")
 	}
 }
 

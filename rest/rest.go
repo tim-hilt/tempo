@@ -61,7 +61,7 @@ func (b *Api) initUser() error {
 		log.Trace().
 			Int("httpStatus", status).
 			Str("body", fmt.Sprintf("%+v", errResponse)).
-			Msg("unexpected http-status")
+			Msg("unexpected http-status when searching for userId")
 		return errors.New("error when getting userId")
 	}
 
@@ -113,7 +113,9 @@ func (a *Api) FindWorklogsInRange(from string, to string) (*[]SearchWorklogsResu
 		log.Trace().
 			Int("status", status).
 			Str("body", fmt.Sprintf("%+v", errResponse)).
-			Msg("unexpected http-status")
+			Str("from", from).
+			Str("to", to).
+			Msg("unexpected http-status when searching for worklogs")
 		return nil, errors.New("error when searching for worklogs")
 	}
 
@@ -162,8 +164,10 @@ func (a *Api) DeleteWorklogs(day string) error {
 				log.Trace().
 					Int("status", status).
 					Str("body", fmt.Sprintf("%+v", errResponse)).
+					Str("day", day).
 					Str("ticket", worklog.Issue.Ticket).
-					Msg("unexpected http-status")
+					Str("comment", worklog.Issue.Description).
+					Msg("unexpected http-status when deleting worklog")
 				return errors.New("error when deleting worklog")
 			}
 
@@ -208,9 +212,11 @@ func (a *Api) CreateWorklog(ticket string, comment string, seconds int, day stri
 		errResponse := resp.Error().(*errorResponse)
 		log.Trace().
 			Str("ticket", ticket).
+			Str("comment", comment).
+			Str("day", day).
 			Int("httpStatus", status).
 			Str("body", fmt.Sprintf("%+v", errResponse)).
-			Msg("unexpected http-status")
+			Msg("unexpected http-status when creating worklog")
 		return errors.New("error when creating worklog")
 	}
 
