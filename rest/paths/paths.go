@@ -1,3 +1,6 @@
+/**
+ * The paths were defined according to https://www.tempo.io/server-api-documentation/timesheets
+ */
 package paths
 
 import "github.com/tim-hilt/tempo/util/config"

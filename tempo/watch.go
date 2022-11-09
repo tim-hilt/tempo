@@ -12,14 +12,14 @@ import (
 	"github.com/bep/debounce"
 	"github.com/fsnotify/fsnotify"
 	"github.com/rs/zerolog/log"
+	"github.com/tim-hilt/tempo/util"
 	"github.com/tim-hilt/tempo/util/config"
-	"github.com/tim-hilt/tempo/util/set"
 	"golang.org/x/sync/errgroup"
 )
 
 var (
-	changedFiles = set.New[string]()
-	watcher      *fsnotify.Watcher
+	changedFile = util.NO_CHANGED_FILES
+	watcher     *fsnotify.Watcher
 )
 
 func init() {
@@ -53,7 +53,8 @@ func (t *Tempo) WatchNotes() {
 }
 
 func (t Tempo) watchLoop() error {
-	debounced := debounce.New(5 * time.Minute)
+	debounceDuration := 15 * time.Second
+	debounced := debounce.New(debounceDuration)
 	for {
 		select {
 		case event, ok := <-watcher.Events:
@@ -63,8 +64,21 @@ func (t Tempo) watchLoop() error {
 			modifiedFile := event.Name
 			if event.Has(fsnotify.Write) && isDailyNote(modifiedFile) {
 				log.Info().Str("file", modifiedFile).Msg("file modification")
-				changedFiles.Add(modifiedFile)
-				debounced(t.submitChanged)
+				if changedFile == util.NO_CHANGED_FILES {
+					changedFile = modifiedFile
+					log.Info().
+						Str("lastModified", changedFile).
+						Str("seconds", debounceDuration.String()).
+						Msg("submitting file in")
+					debounced(t.submitChanged)
+				} else {
+					log.Info().
+						Str("lastModified", changedFile).
+						Str("newlyModified", modifiedFile).
+						Msg("debounce interrupted. submitting last modified file immediately")
+					t.submitChanged()
+					changedFile = modifiedFile
+				}
 			}
 		case err, ok := <-watcher.Errors:
 			if !ok {
@@ -94,22 +108,24 @@ func isDailyNote(file string) bool {
 }
 
 func (t Tempo) submitChanged() {
-	log.Info().
-		Strs("files", changedFiles.Items()).
-		Msg("creating worklogs for files")
-	for _, note := range changedFiles.Items() {
-		note = filepath.Base(note)
-		if err := t.submit(note); err != nil {
-			log.Error().
-				Err(err).
-				Str("file", note).
-				Strs("files", changedFiles.Items()).
-				Msg("error when submitting tickets")
-			return
-		}
+	if changedFile == util.NO_CHANGED_FILES {
+		log.Info().Msg("no changed file")
+		return
 	}
+
+	log.Info().Str("file", changedFile).Msg("creating worklogs")
+
+	if err := t.submit(changedFile); err != nil {
+		log.Error().
+			Err(err).
+			Str("file", changedFile).
+			Msg("error when submitting tickets")
+		return
+	}
+
 	log.Info().
-		Strs("files", changedFiles.Items()).
+		Str("file", changedFile).
 		Msg("finished creating worklogs")
-	changedFiles.Reset()
+
+	changedFile = util.NO_CHANGED_FILES
 }

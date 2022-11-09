@@ -6,10 +6,12 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/rs/zerolog/log"
 	"github.com/tim-hilt/tempo/rest/paths"
+	"github.com/tim-hilt/tempo/util"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -72,7 +74,7 @@ type SearchWorklogsResult struct {
 	TempoWorklogId  int    `json:"tempoWorklogId"`
 	DurationSeconds int    `json:"timeSpentSeconds"`
 	Issue           issue  `json:"issue"`
-	Date            string `json:"started"`
+	DateTime        string `json:"dateCreated"`
 }
 
 func (a *Api) FindWorklogsInRange(from string, to string) (*[]SearchWorklogsResult, error) {
@@ -115,9 +117,22 @@ func (a *Api) DeleteWorklogs(day string) error {
 	for _, worklog := range *worklogs {
 		worklog := worklog // Necessary as of https://go.dev/doc/faq#closures_and_goroutines
 		errs.Go(func() error {
+			now := time.Now()
+			worklogCreated, err := time.Parse(util.DATE_TIME_FORMAT, worklog.DateTime)
+			if !worklogCreated.Before(now.Add(time.Duration(-1) * time.Minute)) {
+				// If worklog isn't older than one minute, then don't delete it
+				// Prevents race conditions with submitting
+				return nil
+			}
+
+			if err != nil {
+				return err
+			}
+
 			worklogId := fmt.Sprint(worklog.TempoWorklogId)
 			log.Info().Str("ticket", worklog.Issue.Ticket).Str("description", worklog.Issue.Description).Msg("started deleting worklog")
 
+			// TODO: Only delete if worklog was created > 5 minutes in the past
 			resp, err := a.client.R().Delete(paths.DeleteWorklogPath(worklogId))
 			status := resp.StatusCode()
 
@@ -145,16 +160,17 @@ type worklog struct {
 func (a *Api) CreateWorklog(ticket string, comment string, seconds int, day string) error {
 	log.Info().Str("ticket", ticket).Msg("start creating worklog")
 	day = strings.TrimSuffix(day, ".md")
+	worklog := worklog{Ticket: ticket, Comment: comment, Seconds: seconds, Day: day, UserId: a.UserId}
 
 	resp, err := a.client.R().
-		SetBody(worklog{Ticket: ticket, Comment: comment, Seconds: seconds, Day: day, UserId: a.UserId}).
+		SetBody(worklog).
 		Post(paths.CreateWorklogPath())
 	status := resp.StatusCode()
 
 	if err != nil {
 		return err
 	} else if status != http.StatusOK {
-		return errors.New("error when creating worklog for ticket " + ticket + ": HTTP-status was " + fmt.Sprint(status))
+		return errors.New("error when creating worklog for ticket " + ticket + ": HTTP-status was " + fmt.Sprint(status) + " with body " + fmt.Sprint(worklog))
 	}
 
 	log.Info().Str("ticket", ticket).Msg("finished creating worklog")

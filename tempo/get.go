@@ -71,7 +71,7 @@ func (t *Tempo) GetMonthlyOvertime(month string) {
 		workedSeconds += float64(worklog.DurationSeconds)
 
 		// Find all days where worklogs were created
-		date := worklog.Date[:10]
+		date := worklog.DateTime[:10]
 		if !util.Contains(daysWorked, date) {
 			daysWorked = append(daysWorked, date)
 		}

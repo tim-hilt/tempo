@@ -26,8 +26,9 @@ func (t Tempo) submit(note string) error {
 		return err
 	}
 
-	workedMinutes := 0
 	errs, _ := errgroup.WithContext(context.Background())
+
+	workedMinutes := 0
 
 	for _, ticket := range ticketEntries {
 		ticket := ticket // Necessary as of https://go.dev/doc/faq#closures_and_goroutines
