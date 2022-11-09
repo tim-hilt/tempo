@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"path/filepath"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/bep/debounce"
@@ -64,13 +65,15 @@ func (t Tempo) watchLoop() error {
 			modifiedFile := event.Name
 			if event.Has(fsnotify.Write) && isDailyNote(modifiedFile) {
 				log.Info().Str("file", modifiedFile).Msg("file modification")
-				if changedFile == util.NO_CHANGED_FILES {
+				// use debounce if file not set or same file edited
+				if changedFile == util.NO_CHANGED_FILES || changedFile == modifiedFile {
 					changedFile = modifiedFile
 					log.Info().
 						Str("lastModified", changedFile).
-						Str("seconds", debounceDuration.String()).
+						Str("duration", debounceDuration.String()).
 						Msg("submitting file in")
 					debounced(t.submitChanged)
+					// submit last file directly otherwise
 				} else {
 					log.Info().
 						Str("lastModified", changedFile).
@@ -113,9 +116,13 @@ func (t Tempo) submitChanged() {
 		return
 	}
 
+	// Format file with path to date
+	date := filepath.Base(changedFile)
+	date = strings.TrimSuffix(date, ".md")
+
 	log.Info().Str("file", changedFile).Msg("creating worklogs")
 
-	if err := t.submit(changedFile); err != nil {
+	if err := t.submit(date); err != nil {
 		log.Error().
 			Err(err).
 			Str("file", changedFile).
