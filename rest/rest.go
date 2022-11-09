@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 
 	"github.com/go-resty/resty/v2"
@@ -26,7 +25,9 @@ func New(user string, password string) *Api {
 	err := tempo.initUser()
 
 	if err != nil {
-		log.Fatal().Err(err).Msg("error when getting user-id")
+		log.Fatal().
+			Err(err).
+			Msg("error when getting user-id")
 	}
 
 	return tempo
@@ -36,18 +37,32 @@ type userIdResponse struct {
 	UserId string `json:"key"`
 }
 
+type errorResponse struct {
+	Errors struct {
+		TimeSpentSeconds string `json:"errors.timeSpentSeconds"`
+	}
+	ErrorMessages []string `json:"errorMessages"`
+	Reasons       []string `json:"reasons"`
+}
+
 func (b *Api) initUser() error {
 	log.Info().Msg("Started getting userId")
 
 	resp, err := b.client.R().
 		SetResult(userIdResponse{}).
+		SetError(errorResponse{}).
 		Get(paths.UserIdPath())
 	status := resp.StatusCode()
 
 	if err != nil {
 		return err
-	} else if status != 200 {
-		return errors.New("error when getting userId: Response was HTTP-Status" + fmt.Sprint(status))
+	} else if status >= http.StatusBadRequest {
+		errResponse := resp.Error().(*errorResponse)
+		log.Trace().
+			Int("httpStatus", status).
+			Str("body", fmt.Sprintf("%+v", errResponse)).
+			Msg("unexpected http-status")
+		return errors.New("error when getting userId")
 	}
 
 	userId := resp.Result().(*userIdResponse).UserId
@@ -76,21 +91,36 @@ type SearchWorklogsResult struct {
 }
 
 func (a *Api) FindWorklogsInRange(from string, to string) (*[]SearchWorklogsResult, error) {
-	log.Info().Str("from", from).Str("to", to).Msg("started searching for worklogs")
+	log.Info().
+		Str("from", from).
+		Str("to", to).
+		Msg("started searching for worklogs")
 	resp, err := a.client.R().
-		SetBody(searchWorklogBody{From: from, To: to, Users: []string{a.UserId}}).
+		SetBody(searchWorklogBody{
+			From:  from,
+			To:    to,
+			Users: []string{a.UserId},
+		}).
 		SetResult([]SearchWorklogsResult{}).
+		SetError(errorResponse{}).
 		Post(paths.FindWorklogsPath())
 	status := resp.StatusCode()
 
 	if err != nil {
 		return nil, err
-	} else if status != http.StatusOK {
-		return nil, errors.New("error when searching for worklogs in range " + from +
-			" to " + to + ": Response was HTTP-status " + fmt.Sprint(status))
+	} else if status >= http.StatusBadRequest {
+		errResponse := resp.Error().(*errorResponse)
+		log.Trace().
+			Int("status", status).
+			Str("body", fmt.Sprintf("%+v", errResponse)).
+			Msg("unexpected http-status")
+		return nil, errors.New("error when searching for worklogs")
 	}
 
-	log.Info().Str("from", from).Str("to", to).Msg("finished searching for worklogs")
+	log.Info().
+		Str("from", from).
+		Str("to", to).
+		Msg("finished searching for worklogs")
 
 	worklogs := resp.Result().(*[]SearchWorklogsResult)
 	return worklogs, nil
@@ -115,18 +145,31 @@ func (a *Api) DeleteWorklogs(day string) error {
 		worklog := worklog // Necessary as of https://go.dev/doc/faq#closures_and_goroutines
 		errs.Go(func() error {
 			worklogId := fmt.Sprint(worklog.TempoWorklogId)
-			log.Info().Str("ticket", worklog.Issue.Ticket).Str("description", worklog.Issue.Description).Msg("started deleting worklog")
+			log.Info().
+				Str("ticket", worklog.Issue.Ticket).
+				Str("description", worklog.Issue.Description).
+				Msg("started deleting worklog")
 
-			resp, err := a.client.R().Delete(paths.DeleteWorklogPath(worklogId))
+			resp, err := a.client.R().
+				SetError(errorResponse{}).
+				Delete(paths.DeleteWorklogPath(worklogId))
 			status := resp.StatusCode()
 
 			if err != nil {
 				return err
-			} else if status != http.StatusNoContent {
-				return errors.New("HTTP-response was " + fmt.Sprint(status))
+			} else if status >= http.StatusBadRequest {
+				errResponse := resp.Error().(*errorResponse)
+				log.Trace().
+					Int("status", status).
+					Str("body", fmt.Sprintf("%+v", errResponse)).
+					Str("ticket", worklog.Issue.Ticket).
+					Msg("unexpected http-status")
+				return errors.New("error when deleting worklog")
 			}
 
-			log.Info().Str("ticket", worklog.Issue.Ticket).Msg("finished deleting worklog")
+			log.Info().
+				Str("ticket", worklog.Issue.Ticket).
+				Msg("finished deleting worklog")
 			return nil
 		})
 	}
@@ -142,27 +185,38 @@ type worklog struct {
 }
 
 func (a *Api) CreateWorklog(ticket string, comment string, seconds int, day string) error {
-	log.Info().Str("ticket", ticket).Msg("start creating worklog")
-	worklog := worklog{Ticket: ticket, Comment: comment, Seconds: seconds, Day: day, UserId: a.UserId}
+	log.Info().
+		Str("ticket", ticket).
+		Msg("start creating worklog")
+	worklog := worklog{
+		Ticket:  ticket,
+		Comment: comment,
+		Seconds: seconds,
+		Day:     day,
+		UserId:  a.UserId,
+	}
 
 	resp, err := a.client.R().
 		SetBody(worklog).
-		SetDoNotParseResponse(true).
+		SetError(errorResponse{}).
 		Post(paths.CreateWorklogPath())
 	status := resp.StatusCode()
 
 	if err != nil {
 		return err
-	} else if status != http.StatusOK {
-		body, err := ioutil.ReadAll(resp.RawResponse.Body)
-		if err != nil {
-			return err
-		}
-		log.Trace().Str("ticket", ticket).Int("httpStatus", status).Str("responseBody", string(body)).Msg("unexpected http-status")
+	} else if status >= http.StatusBadRequest {
+		errResponse := resp.Error().(*errorResponse)
+		log.Trace().
+			Str("ticket", ticket).
+			Int("httpStatus", status).
+			Str("body", fmt.Sprintf("%+v", errResponse)).
+			Msg("unexpected http-status")
 		return errors.New("error when creating worklog")
 	}
 
-	log.Info().Str("ticket", ticket).Msg("finished creating worklog")
+	log.Info().
+		Str("ticket", ticket).
+		Msg("finished creating worklog")
 
 	return nil
 }
