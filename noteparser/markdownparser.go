@@ -78,11 +78,23 @@ func parseTicketEntries(ticketTable ast.Node, file []byte) ([]DailyNoteEntry, er
 		})
 		durationMinutes, err := calcDurationMinutes(rowVals[2])
 
+		if durationMinutes == 0 {
+			// Don't add to ticketEntries if no duration
+			return nil
+		}
+
 		if err != nil {
 			return err
 		}
 
-		ticketEntries = append(ticketEntries, DailyNoteEntry{Ticket: rowVals[0], Comment: rowVals[1], DurationMinutes: durationMinutes})
+		ticketEntries = append(
+			ticketEntries,
+			DailyNoteEntry{
+				Ticket:          rowVals[0],
+				Comment:         rowVals[1],
+				DurationMinutes: durationMinutes,
+			},
+		)
 		return nil
 	})
 

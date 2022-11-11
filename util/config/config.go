@@ -61,6 +61,10 @@ func GetColumns() columns {
 	}
 }
 
+func DebugEnabled() bool {
+	return viper.GetBool(DEBUG_ENABLED_CONFIG_VAL)
+}
+
 func Validate() {
 	user, password := GetCredentials()
 	config := configParams{

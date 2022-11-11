@@ -10,6 +10,7 @@ const (
 	TICKETS_COLUMN_CONFIG_VAL   = "columns.tickets"
 	COMMENTS_COLUMN_CONFIG_VAL  = "columns.comments"
 	DURATIONS_COLUMN_CONFIG_VAL = "columns.durations"
+	DEBUG_ENABLED_CONFIG_VAL    = "debug"
 
 	USER_FLAG_VAL           = "jirauser"
 	PASSWORD_FLAG_VAL       = "password"
@@ -17,4 +18,5 @@ const (
 	LOGLEVEL_FLAG_VAL       = "loglevel"
 	DAILYWORKHOURS_FLAG_VAL = "workhours"
 	HOST_FLAG_VAL           = "host"
+	DEBUG_ENABLED_FLAG_VAL  = "debug"
 )

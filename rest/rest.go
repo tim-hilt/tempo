@@ -9,6 +9,7 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/rs/zerolog/log"
 	"github.com/tim-hilt/tempo/rest/paths"
+	"github.com/tim-hilt/tempo/util/config"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -20,6 +21,7 @@ type Api struct {
 func New(user string, password string) *Api {
 	apiClient := resty.New()
 	apiClient.SetBasicAuth(user, password)
+	apiClient.SetDebug(config.DebugEnabled())
 
 	tempo := &Api{client: apiClient}
 	err := tempo.initUser()
@@ -39,8 +41,8 @@ type userIdResponse struct {
 
 type errorResponse struct {
 	Errors struct {
-		TimeSpentSeconds string `json:"errors.timeSpentSeconds"`
-	}
+		TimeSpentSeconds string `json:"timeSpentSeconds"`
+	} `json:"errors"`
 	ErrorMessages []string `json:"errorMessages"`
 	Reasons       []string `json:"reasons"`
 }
