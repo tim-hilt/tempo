@@ -77,8 +77,8 @@ func (b *Api) initUser() error {
 type searchWorklogBody struct {
 	From    string   `json:"from,omitempty"`
 	To      string   `json:"to,omitempty"`
+	Tickets []string `json:"taskKey,omitempty"`
 	Users   []string `json:"worker"`
-	Tickets []string `json:"taskKey"`
 }
 
 type issue struct {

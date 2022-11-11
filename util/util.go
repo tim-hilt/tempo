@@ -19,6 +19,15 @@ func Max[T constraints.Ordered](args ...T) (max T) {
 	return
 }
 
+func Min[T constraints.Ordered](args ...T) (min T) {
+	for _, val := range args {
+		if val < min {
+			min = val
+		}
+	}
+	return
+}
+
 func Contains[T comparable](s []T, e T) bool {
 	for _, a := range s {
 		if a == e {

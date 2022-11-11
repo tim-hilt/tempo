@@ -43,7 +43,7 @@ func (t Tempo) GetMonthlyHours(month string) {
 		fmt.Sprintf("%02d", hours) + ":" + fmt.Sprintf("%02d", minutes))
 }
 
-func (t Tempo) GetTicketsForDay(day string) {
+func (t Tempo) GetWorklogsForDay(day string) {
 	worklogs, err := t.Api.FindWorklogsInRange(day, day)
 
 	if err != nil {
@@ -51,7 +51,9 @@ func (t Tempo) GetTicketsForDay(day string) {
 	}
 
 	rows := []table.Row{}
+	totalSeconds := 0
 	for _, worklog := range *worklogs {
+		totalSeconds += worklog.DurationSeconds
 		hours, minutes := util.Divmod(
 			worklog.DurationSeconds/util.SECONDS_IN_MINUTE,
 			util.MINUTES_IN_HOUR,
@@ -60,7 +62,18 @@ func (t Tempo) GetTicketsForDay(day string) {
 			fmt.Sprintf("%02d", hours) + ":" + fmt.Sprintf("%02d", minutes)})
 	}
 
-	// TODO: Add row "Sum"
+	totalHours, totalMinutes := util.Divmod(
+		totalSeconds/util.SECONDS_IN_MINUTE,
+		util.MINUTES_IN_HOUR,
+	)
+	rows = append(
+		rows,
+		table.Row{
+			"",
+			"Sum",
+			fmt.Sprintf("%02d", totalHours) + ":" + fmt.Sprintf("%02d", totalMinutes),
+		},
+	)
 
 	columns := tablecomponent.CreateColumns(rows, []string{"Ticket", "Description", "Duration"})
 	if err := tablecomponent.Table(columns, rows); err != nil {
@@ -100,7 +113,9 @@ func (t Tempo) GetWorklogsForTicket(ticket string) {
 	}
 
 	rows := []table.Row{}
+	totalSeconds := 0
 	for _, worklog := range *worklogs {
+		totalSeconds += worklog.DurationSeconds
 		hours, minutes := util.Divmod(
 			worklog.DurationSeconds/util.SECONDS_IN_MINUTE,
 			util.MINUTES_IN_HOUR,
@@ -112,7 +127,19 @@ func (t Tempo) GetWorklogsForTicket(ticket string) {
 		)
 	}
 
-	// TODO: Add row "Sum"
+	totalHours, totalMinutes := util.Divmod(
+		totalSeconds/util.SECONDS_IN_MINUTE,
+		util.MINUTES_IN_HOUR,
+	)
+	rows = append(
+		rows,
+		table.Row{
+			"",
+			"",
+			"Sum",
+			fmt.Sprintf("%02d", totalHours) + ":" + fmt.Sprintf("%02d", totalMinutes),
+		},
+	)
 
 	columns := tablecomponent.CreateColumns(
 		rows,

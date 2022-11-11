@@ -13,7 +13,7 @@ func init() {
 
 // monthlyHoursCmd represents the monthlyHours command
 var monthlyHoursCmd = &cobra.Command{
-	Use:   "monthly-hours",
+	Use:   "monthly-hours [month]",
 	Short: "Get number of monthly hours",
 	Long:  "Get number of monthly hours",
 	Run:   monthlyHours,

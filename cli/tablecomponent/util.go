@@ -12,13 +12,22 @@ func getMaxChars(rows []table.Row, index int) int {
 			max = len(entry[index])
 		}
 	}
+	if max > 80 {
+		return 80
+	}
 	return max
 }
 
 func CreateColumns(rows []table.Row, columnTitles []string) []table.Column {
 	columns := []table.Column{}
 	for i, columnTitle := range columnTitles {
-		columns = append(columns, table.Column{Title: columnTitle, Width: util.Max(getMaxChars(rows, i), len(columnTitle))})
+		columns = append(
+			columns,
+			table.Column{
+				Title: columnTitle,
+				Width: util.Max(getMaxChars(rows, i), len(columnTitle)),
+			},
+		)
 	}
 	return columns
 }
