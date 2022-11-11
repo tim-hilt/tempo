@@ -19,7 +19,10 @@ func (t Tempo) boilerPlate(month string) *[]rest.SearchWorklogsResult {
 		log.Fatal().Err(err).Str("date", month).Msg("parsing error")
 	}
 	end := start.AddDate(0, 1, -1)
-	worklogs, err := t.Api.FindWorklogsInRange(start.Format(util.DATE_FORMAT), end.Format(util.DATE_FORMAT))
+	worklogs, err := t.Api.FindWorklogsInRange(
+		start.Format(util.DATE_FORMAT),
+		end.Format(util.DATE_FORMAT),
+	)
 
 	if err != nil {
 		log.Fatal().Err(err).Msg("error when searching for worklogs")
@@ -27,7 +30,7 @@ func (t Tempo) boilerPlate(month string) *[]rest.SearchWorklogsResult {
 	return worklogs
 }
 
-func (t *Tempo) GetMonthlyHours(month string) {
+func (t Tempo) GetMonthlyHours(month string) {
 	worklogs := t.boilerPlate(month)
 
 	bookedTimeSeconds := 0
@@ -40,7 +43,7 @@ func (t *Tempo) GetMonthlyHours(month string) {
 		fmt.Sprintf("%02d", hours) + ":" + fmt.Sprintf("%02d", minutes))
 }
 
-func (t *Tempo) GetTicketsForDay(day string) {
+func (t Tempo) GetTicketsForDay(day string) {
 	worklogs, err := t.Api.FindWorklogsInRange(day, day)
 
 	if err != nil {
@@ -49,10 +52,15 @@ func (t *Tempo) GetTicketsForDay(day string) {
 
 	rows := []table.Row{}
 	for _, worklog := range *worklogs {
-		hours, minutes := util.Divmod(worklog.DurationSeconds/util.SECONDS_IN_MINUTE, util.MINUTES_IN_HOUR)
-		rows = append(rows, table.Row{worklog.Issue.Ticket, worklog.Issue.Description,
+		hours, minutes := util.Divmod(
+			worklog.DurationSeconds/util.SECONDS_IN_MINUTE,
+			util.MINUTES_IN_HOUR,
+		)
+		rows = append(rows, table.Row{worklog.Issue.Ticket, worklog.Description,
 			fmt.Sprintf("%02d", hours) + ":" + fmt.Sprintf("%02d", minutes)})
 	}
+
+	// TODO: Add row "Sum"
 
 	columns := tablecomponent.CreateColumns(rows, []string{"Ticket", "Description", "Duration"})
 	if err := tablecomponent.Table(columns, rows); err != nil {
@@ -61,7 +69,7 @@ func (t *Tempo) GetTicketsForDay(day string) {
 }
 
 // TODO: Doesn't work for days that are used to bring down overtime
-func (t *Tempo) GetMonthlyOvertime(month string) {
+func (t Tempo) GetMonthlyOvertime(month string) {
 	worklogs := t.boilerPlate(month)
 
 	var workedSeconds float64 = 0
@@ -82,4 +90,35 @@ func (t *Tempo) GetMonthlyOvertime(month string) {
 	overtime := workedHours - float64(len(daysWorked)*dailyWorkhours)
 
 	fmt.Println("Overtime for " + month + ": " + fmt.Sprint(overtime) + " hours")
+}
+
+func (t Tempo) GetWorklogsForTicket(ticket string) {
+	worklogs, err := t.Api.FindWorklogsForTicket(ticket)
+
+	if err != nil {
+		log.Fatal().Str("ticket", ticket).Msg("error when searching worklogs")
+	}
+
+	rows := []table.Row{}
+	for _, worklog := range *worklogs {
+		hours, minutes := util.Divmod(
+			worklog.DurationSeconds/util.SECONDS_IN_MINUTE,
+			util.MINUTES_IN_HOUR,
+		)
+		rows = append(
+			rows,
+			table.Row{worklog.DateTime[:10], worklog.Issue.Ticket, worklog.Description,
+				fmt.Sprintf("%02d", hours) + ":" + fmt.Sprintf("%02d", minutes)},
+		)
+	}
+
+	// TODO: Add row "Sum"
+
+	columns := tablecomponent.CreateColumns(
+		rows,
+		[]string{"Date", "Ticket", "Description", "Duration"},
+	)
+	if err := tablecomponent.Table(columns, rows); err != nil {
+		log.Fatal().Err(err).Msg("error when creating table")
+	}
 }

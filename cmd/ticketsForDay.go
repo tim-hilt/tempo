@@ -8,6 +8,7 @@ import (
 )
 
 // ticketsForDayCmd represents the ticketsForDay command
+// TODO: Rename tickets to worklogs
 var ticketsForDayCmd = &cobra.Command{
 	Use:   "tickets-for-day [date]",
 	Short: "Print all tickets for given day to the console",
