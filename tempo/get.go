@@ -122,7 +122,7 @@ func (t Tempo) GetWorklogsForTicket(ticket string) {
 		)
 		rows = append(
 			rows,
-			table.Row{worklog.DateTime[:10], worklog.Issue.Ticket, worklog.Description,
+			table.Row{worklog.DateTime[:10], worklog.Description,
 				fmt.Sprintf("%02d", hours) + ":" + fmt.Sprintf("%02d", minutes)},
 		)
 	}
@@ -135,7 +135,6 @@ func (t Tempo) GetWorklogsForTicket(ticket string) {
 		rows,
 		table.Row{
 			"",
-			"",
 			"Sum",
 			fmt.Sprintf("%02d", totalHours) + ":" + fmt.Sprintf("%02d", totalMinutes),
 		},
@@ -143,7 +142,7 @@ func (t Tempo) GetWorklogsForTicket(ticket string) {
 
 	columns := tablecomponent.CreateColumns(
 		rows,
-		[]string{"Date", "Ticket", "Description", "Duration"},
+		[]string{"Date", "Description", "Duration"},
 	)
 	if err := tablecomponent.Table(columns, rows); err != nil {
 		log.Fatal().Err(err).Msg("error when creating table")
