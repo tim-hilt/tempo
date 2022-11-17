@@ -1,6 +1,9 @@
 package util
 
 import (
+	"strconv"
+	"strings"
+
 	"golang.org/x/exp/constraints"
 )
 
@@ -47,4 +50,25 @@ func SlicesEqual[T comparable](a, b []T) bool {
 		}
 	}
 	return true
+}
+
+func CalcDurationMinutes(duration string) (int, error) {
+	if duration == "" {
+		return 0, nil
+	}
+
+	minutesHours := strings.Split(duration, ":")
+	hours, err := strconv.Atoi(minutesHours[0])
+
+	if err != nil {
+		return -1, err
+	}
+
+	minutes, err := strconv.Atoi(minutesHours[1])
+
+	if err != nil {
+		return -1, err
+	}
+
+	return hours*60 + minutes, nil
 }

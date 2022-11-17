@@ -142,6 +142,7 @@ func (t Tempo) GetWorklogsForTicket(ticket string) {
 
 	columns := tablecomponent.CreateColumns(
 		rows,
+		// TODO: Find a way to make the lenght of this array fit the the rows
 		[]string{"Date", "Description", "Duration"},
 	)
 	if err := tablecomponent.Table(columns, rows); err != nil {
