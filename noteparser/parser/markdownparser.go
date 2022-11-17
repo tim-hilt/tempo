@@ -116,6 +116,8 @@ func (m MarkdownParser) parseTicketEntries(
 }
 
 func (m MarkdownParser) getDailyNote(day string) ([]byte, error) {
+	// TODO: How can I find out the suffix at runtime and choose
+	//       the parser accordingly?
 	if !strings.HasSuffix(day, ".md") {
 		day = day + ".md"
 	}
@@ -131,6 +133,7 @@ func (m MarkdownParser) getDailyNote(day string) ([]byte, error) {
 	return file, nil
 }
 
+// This function suffices to satisfy the parser-interface
 func (m MarkdownParser) parseDailyNote(day string) ([]DailyNoteEntry, error) {
 	dailyNote, err := m.getDailyNote(day)
 
