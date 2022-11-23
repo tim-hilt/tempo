@@ -47,10 +47,10 @@ type errorResponse struct {
 	Reasons       []string `json:"reasons"`
 }
 
-func (b *Api) initUser() error {
+func (a *Api) initUser() error {
 	log.Info().Msg("Started getting userId")
 
-	resp, err := b.client.R().
+	resp, err := a.client.R().
 		SetResult(userIdResponse{}).
 		SetError(errorResponse{}).
 		Get(paths.UserIdPath())
@@ -69,7 +69,7 @@ func (b *Api) initUser() error {
 
 	userId := resp.Result().(*userIdResponse).UserId
 	log.Info().Str("userId", userId).Msg("finished getting userId")
-	b.UserId = userId
+	a.UserId = userId
 
 	return nil
 }
@@ -93,7 +93,7 @@ type SearchWorklogsResult struct {
 	DateTime        string `json:"dateCreated"`
 }
 
-func (a *Api) FindWorklogs(searchBody searchWorklogBody) (*[]SearchWorklogsResult, error) {
+func (a Api) FindWorklogs(searchBody searchWorklogBody) (*[]SearchWorklogsResult, error) {
 	searchBody.Users = []string{a.UserId}
 	log.Info().
 		Str("query", fmt.Sprintf("%+v", searchBody)).
@@ -144,19 +144,10 @@ func (a Api) FindWorklogsForTicket(ticket string) (*[]SearchWorklogsResult, erro
 	return worklogs, nil
 }
 
-func (a *Api) findWorklogIdsOn(day string) (*[]SearchWorklogsResult, error) {
-	worklogs, err := a.FindWorklogsInRange(day, day)
-	if err != nil {
-		return nil, err
-	}
-	return worklogs, nil
-}
+// DeleteWorklogs is not needed at the moment. I'll leave it here
+// in case I'll add a Delete-command at some point
+func (a Api) DeleteWorklogs(worklogs *[]SearchWorklogsResult) error {
 
-func (a *Api) DeleteWorklogs(day string) error {
-	worklogs, err := a.findWorklogIdsOn(day)
-	if err != nil {
-		return err
-	}
 	errs, _ := errgroup.WithContext(context.Background())
 
 	for _, worklog := range *worklogs {
@@ -180,7 +171,6 @@ func (a *Api) DeleteWorklogs(day string) error {
 				log.Trace().
 					Int("status", status).
 					Str("error", fmt.Sprintf("%+v", errResponse)).
-					Str("day", day).
 					Str("ticket", worklog.Issue.Ticket).
 					Str("description", worklog.Description).
 					Msg("unexpected http-status when deleting worklog")
@@ -204,7 +194,7 @@ type worklog struct {
 	UserId      string `json:"worker"`
 }
 
-func (a *Api) CreateWorklog(ticket string, description string, seconds int, day string) error {
+func (a Api) CreateWorklog(ticket string, description string, seconds int, day string) error {
 	log.Info().
 		Str("ticket", ticket).
 		Msg("start creating worklog")
