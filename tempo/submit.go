@@ -46,20 +46,26 @@ func (t Tempo) submit(note string) error {
 			}
 		}
 
+		hours, minutes := util.Divmod(
+			ticketEntry.DurationSeconds/util.SECONDS_IN_MINUTE,
+			util.MINUTES_IN_HOUR,
+		)
 		if !entryInWorklogs {
 			newTicketEntries = append(newTicketEntries, ticketEntry)
 			worklogs = util.Remove(worklogs, worklogToDelete)
 			log.Trace().
 				Str("ticket", ticketEntry.Ticket).
 				Str("comment", ticketEntry.Comment).
-				Int("durationSeconds", ticketEntry.DurationSeconds).
+				Int("hours", hours).
+				Int("minutes", minutes).
 				Msg("not submitted yet")
 		} else {
 			workedSeconds += ticketEntry.DurationSeconds
 			log.Info().
 				Str("ticket", ticketEntry.Ticket).
 				Str("comment", ticketEntry.Comment).
-				Int("durationSeconds", ticketEntry.DurationSeconds).
+				Int("hours", hours).
+				Int("minutes", minutes).
 				Msg("already submitted")
 		}
 	}
