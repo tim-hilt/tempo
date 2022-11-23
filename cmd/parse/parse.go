@@ -2,7 +2,6 @@ package parse
 
 import (
 	"regexp"
-	"strings"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -11,12 +10,7 @@ import (
 
 func ParseDateArg(args []string) string {
 	dateArg := args[0]
-	if strings.HasSuffix(dateArg, ".md") {
-		pathPieces := strings.Split(dateArg, "/")
-		filePieces := strings.Split(pathPieces[len(pathPieces)-1], ".")
-		validateDate(filePieces[0])
-		return filePieces[0]
-	} else if dateArg == "today" {
+	if dateArg == "today" {
 		return time.Now().Format(util.DATE_FORMAT)
 	} else {
 		validateDate(dateArg)

@@ -1,10 +1,6 @@
 package parser
 
 import (
-	"os"
-	"path/filepath"
-	"strings"
-
 	"github.com/rs/zerolog/log"
 	"github.com/tim-hilt/tempo/util"
 	"github.com/tim-hilt/tempo/util/config"
@@ -115,36 +111,14 @@ func (m MarkdownParser) parseTicketEntries(
 	return ticketEntries, nil
 }
 
-func (m MarkdownParser) getDailyNote(day string) ([]byte, error) {
-	// TODO: How can I find out the suffix at runtime and choose
-	//       the parser accordingly?
-	if !strings.HasSuffix(day, ".md") {
-		day = day + ".md"
-	}
-	notesDir := config.GetNotesdir()
-	fileWithPath := filepath.Join(notesDir, day)
-
-	file, err := os.ReadFile(fileWithPath)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return file, nil
-}
-
 // This function suffices to satisfy the parser-interface
-func (m MarkdownParser) parseDailyNote(day string) ([]DailyNoteEntry, error) {
-	dailyNote, err := m.getDailyNote(day)
-
-	if err != nil {
-		return nil, err
-	}
+func (m MarkdownParser) parseDailyNote(dailyNote []byte) ([]DailyNoteEntry, error) {
 	ticketTable := m.findTicketTable(dailyNote)
 	ticketEntries, err := m.parseTicketEntries(ticketTable, dailyNote)
+
 	if err != nil {
 		return nil, err
 	}
-	return ticketEntries, nil
 
+	return ticketEntries, nil
 }
