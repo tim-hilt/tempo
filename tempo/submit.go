@@ -39,6 +39,7 @@ func (t Tempo) submit(note string) error {
 
 	// Find all ticketEntries, that are not submitted yet
 	newTicketEntries := []parser.DailyNoteEntry{}
+	workedMinutes := 0
 
 	for _, ticketEntry := range ticketEntries {
 		entryInWorklogs := false
@@ -56,12 +57,22 @@ func (t Tempo) submit(note string) error {
 		if !entryInWorklogs {
 			newTicketEntries = append(newTicketEntries, ticketEntry)
 			worklogs = remove(worklogs, worklogToDelete)
+			log.Trace().
+				Str("ticket", ticketEntry.Ticket).
+				Str("comment", ticketEntry.Comment).
+				Int("durationMinutes", ticketEntry.DurationMinutes).
+				Msg("not submitted yet")
+		} else {
+			workedMinutes += ticketEntry.DurationMinutes
+			log.Info().
+				Str("ticket", ticketEntry.Ticket).
+				Str("comment", ticketEntry.Comment).
+				Int("durationMinutes", ticketEntry.DurationMinutes).
+				Msg("already submitted")
 		}
 	}
 
 	errs, _ := errgroup.WithContext(context.Background())
-
-	workedMinutes := 0
 
 	for _, ticket := range newTicketEntries {
 		ticket := ticket // Necessary as of https://go.dev/doc/faq#closures_and_goroutines
