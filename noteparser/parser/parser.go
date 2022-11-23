@@ -9,7 +9,7 @@ type Parser interface {
 type DailyNoteEntry struct {
 	Ticket          string
 	Comment         string
-	DurationMinutes int
+	DurationSeconds int
 }
 
 func GetTickets(p Parser, day string) ([]DailyNoteEntry, error) {

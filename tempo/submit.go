@@ -6,7 +6,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/tim-hilt/tempo/noteparser"
 	"github.com/tim-hilt/tempo/noteparser/parser"
-	"github.com/tim-hilt/tempo/rest"
 	"github.com/tim-hilt/tempo/util"
 	"golang.org/x/sync/errgroup"
 )
@@ -15,13 +14,6 @@ func (t Tempo) SubmitDay(day string) {
 	if err := t.submit(day); err != nil {
 		log.Fatal().Err(err).Str("day", day).Msg("error when submitting")
 	}
-}
-
-func remove(s *[]rest.SearchWorklogsResult, i int) *[]rest.SearchWorklogsResult {
-	t := *s
-	t[i] = t[len(t)-1]
-	z := t[:len(t)-1]
-	return &z
 }
 
 func (t Tempo) submit(note string) error {
@@ -39,7 +31,7 @@ func (t Tempo) submit(note string) error {
 
 	// Find all ticketEntries, that are not submitted yet
 	newTicketEntries := []parser.DailyNoteEntry{}
-	workedMinutes := 0
+	workedSeconds := 0
 
 	for _, ticketEntry := range ticketEntries {
 		entryInWorklogs := false
@@ -47,7 +39,7 @@ func (t Tempo) submit(note string) error {
 		for i, worklog := range *worklogs {
 			if ticketEntry.Ticket == worklog.Issue.Ticket &&
 				ticketEntry.Comment == worklog.Description &&
-				ticketEntry.DurationMinutes*60 == worklog.DurationSeconds {
+				ticketEntry.DurationSeconds == worklog.DurationSeconds {
 				entryInWorklogs = true
 				worklogToDelete = i
 				break
@@ -56,18 +48,18 @@ func (t Tempo) submit(note string) error {
 
 		if !entryInWorklogs {
 			newTicketEntries = append(newTicketEntries, ticketEntry)
-			worklogs = remove(worklogs, worklogToDelete)
+			worklogs = util.Remove(worklogs, worklogToDelete)
 			log.Trace().
 				Str("ticket", ticketEntry.Ticket).
 				Str("comment", ticketEntry.Comment).
-				Int("durationMinutes", ticketEntry.DurationMinutes).
+				Int("durationSeconds", ticketEntry.DurationSeconds).
 				Msg("not submitted yet")
 		} else {
-			workedMinutes += ticketEntry.DurationMinutes
+			workedSeconds += ticketEntry.DurationSeconds
 			log.Info().
 				Str("ticket", ticketEntry.Ticket).
 				Str("comment", ticketEntry.Comment).
-				Int("durationMinutes", ticketEntry.DurationMinutes).
+				Int("durationSeconds", ticketEntry.DurationSeconds).
 				Msg("already submitted")
 		}
 	}
@@ -77,10 +69,10 @@ func (t Tempo) submit(note string) error {
 	for _, ticket := range newTicketEntries {
 		ticket := ticket // Necessary as of https://go.dev/doc/faq#closures_and_goroutines
 		errs.Go(func() error {
-			if err := t.Api.CreateWorklog(ticket.Ticket, ticket.Comment, ticket.DurationMinutes*60, note); err != nil {
+			if err := t.Api.CreateWorklog(ticket.Ticket, ticket.Comment, ticket.DurationSeconds, note); err != nil {
 				return err
 			}
-			workedMinutes += ticket.DurationMinutes
+			workedSeconds += ticket.DurationSeconds
 			return nil
 		})
 	}
@@ -89,7 +81,7 @@ func (t Tempo) submit(note string) error {
 		return err
 	}
 
-	hours, minutes := util.Divmod(workedMinutes, util.MINUTES_IN_HOUR)
+	hours, minutes := util.Divmod(workedSeconds/util.SECONDS_IN_MINUTE, util.MINUTES_IN_HOUR)
 	log.Info().Int("hours", hours).Int("minutes", minutes).Msg("successfully logged")
 	return nil
 }

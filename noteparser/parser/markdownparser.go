@@ -86,9 +86,9 @@ func (m MarkdownParser) parseTicketEntries(
 			rowVals = append(rowVals, string(tableCell.Text(file)))
 			return nil
 		})
-		durationMinutes, err := util.CalcDurationMinutes(rowVals[2])
+		durationSeconds, err := util.CalcDurationSeconds(rowVals[2])
 
-		if durationMinutes == 0 {
+		if durationSeconds == 0 {
 			// Don't add to ticketEntries if no duration
 			return nil
 		}
@@ -102,7 +102,7 @@ func (m MarkdownParser) parseTicketEntries(
 			DailyNoteEntry{
 				Ticket:          rowVals[0],
 				Comment:         rowVals[1],
-				DurationMinutes: durationMinutes,
+				DurationSeconds: durationSeconds,
 			},
 		)
 		return nil

@@ -52,7 +52,7 @@ func SlicesEqual[T comparable](a, b []T) bool {
 	return true
 }
 
-func CalcDurationMinutes(duration string) (int, error) {
+func CalcDurationSeconds(duration string) (int, error) {
 	if duration == "" {
 		return 0, nil
 	}
@@ -70,5 +70,12 @@ func CalcDurationMinutes(duration string) (int, error) {
 		return -1, err
 	}
 
-	return hours*60 + minutes, nil
+	return (hours*MINUTES_IN_HOUR + minutes) * SECONDS_IN_MINUTE, nil
+}
+
+func Remove[T any](s *[]T, i int) *[]T {
+	t := *s
+	t[i] = t[len(t)-1]
+	z := t[:len(t)-1]
+	return &z
 }
