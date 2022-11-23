@@ -9,7 +9,6 @@ import (
 	"github.com/tim-hilt/tempo/util/config"
 )
 
-// TODO: Make sure that "day" is always just a date in the form 2022-11-23
 func ParseDailyNote(day string) ([]parser.DailyNoteEntry, error) {
 	notesDir := config.GetNotesdir()
 	fileWithPath := filepath.Join(notesDir, day)
@@ -39,7 +38,7 @@ func ParseDailyNote(day string) ([]parser.DailyNoteEntry, error) {
 			return nil, err
 		}
 		return ticketEntries, nil
-		// TODO: Add new file-formats here
+		// Add new file-formats here
 	} else {
 		return nil, errors.New("file-format \"" + fileEnding + "\" not supported")
 	}
