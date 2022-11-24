@@ -1,4 +1,4 @@
-package rest
+package api
 
 import (
 	"errors"
@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/rs/zerolog/log"
-	"github.com/tim-hilt/tempo/rest/paths"
+	"github.com/tim-hilt/tempo/api/paths"
 )
 
 type searchWorklogBody struct {

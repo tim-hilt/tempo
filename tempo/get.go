@@ -6,13 +6,13 @@ import (
 
 	"github.com/charmbracelet/bubbles/table"
 	"github.com/rs/zerolog/log"
+	"github.com/tim-hilt/tempo/api"
 	"github.com/tim-hilt/tempo/cli/tablecomponent"
-	"github.com/tim-hilt/tempo/rest"
 	"github.com/tim-hilt/tempo/util"
 	"github.com/tim-hilt/tempo/util/config"
 )
 
-func (t Tempo) boilerPlate(month string) *[]rest.SearchWorklogsResult {
+func (t Tempo) boilerPlate(month string) *[]api.SearchWorklogsResult {
 	start, err := time.Parse(util.MONTH_FORMAT, month)
 
 	if err != nil {

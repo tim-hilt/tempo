@@ -1,4 +1,4 @@
-package rest
+package api
 
 import (
 	"errors"
@@ -7,7 +7,7 @@ import (
 
 	"github.com/go-resty/resty/v2"
 	"github.com/rs/zerolog/log"
-	"github.com/tim-hilt/tempo/rest/paths"
+	"github.com/tim-hilt/tempo/api/paths"
 	"github.com/tim-hilt/tempo/util/config"
 )
 

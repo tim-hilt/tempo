@@ -1,15 +1,15 @@
 package tempo
 
 import (
-	"github.com/tim-hilt/tempo/rest"
+	"github.com/tim-hilt/tempo/api"
 )
 
 type Tempo struct {
-	Api *rest.Api
+	Api *api.Api
 }
 
 func New(user string, password string) *Tempo {
-	api := rest.New(user, password)
+	api := api.New(user, password)
 	tempo := &Tempo{Api: api}
 	return tempo
 }
