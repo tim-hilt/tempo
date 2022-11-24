@@ -72,10 +72,3 @@ func CalcDurationSeconds(duration string) (int, error) {
 
 	return (hours*MINUTES_IN_HOUR + minutes) * SECONDS_IN_MINUTE, nil
 }
-
-func Remove[T any](s *[]T, i int) *[]T {
-	t := *s
-	t[i] = t[len(t)-1]
-	z := t[:len(t)-1]
-	return &z
-}

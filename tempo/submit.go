@@ -5,7 +5,6 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/tim-hilt/tempo/noteparser"
-	"github.com/tim-hilt/tempo/noteparser/parser"
 	"github.com/tim-hilt/tempo/util"
 	"golang.org/x/sync/errgroup"
 )
@@ -16,66 +15,35 @@ func (t Tempo) SubmitDay(day string) {
 	}
 }
 
-func (t Tempo) submit(note string) error {
-	ticketEntries, err := noteparser.ParseDailyNote(note)
+func (t Tempo) submit(day string) error {
+	worklogs, err := t.Api.FindWorklogsInRange(day, day)
 
 	if err != nil {
 		return err
 	}
 
-	worklogs, err := t.Api.FindWorklogsInRange(note, note)
+	// TODO: One way of submitting only changed ticket-entries would be to keep a copy of the last state of the ticketEntries and then diff their contents. Afterwards:
+	// - Deleted entries are deleted
+	// - Changed entries are deleted and re-submitted
+	// - New entries are submitted
+	// I still need to clarify how I can detect a changed ticket though
+	if err := t.Api.DeleteWorklogs(worklogs); err != nil {
+		return err
+	}
+
+	ticketEntries, err := noteparser.ParseDailyNote(day)
 
 	if err != nil {
 		return err
 	}
 
-	// Find all ticketEntries, that are not submitted yet
-	newTicketEntries := []parser.DailyNoteEntry{}
 	workedSeconds := 0
-
-	for _, ticketEntry := range ticketEntries {
-		entryInWorklogs := false
-		worklogToDelete := 0
-		for i, worklog := range *worklogs {
-			if ticketEntry.Ticket == worklog.Issue.Ticket &&
-				ticketEntry.Comment == worklog.Description &&
-				ticketEntry.DurationSeconds == worklog.DurationSeconds {
-				entryInWorklogs = true
-				worklogToDelete = i
-				break
-			}
-		}
-
-		hours, minutes := util.Divmod(
-			ticketEntry.DurationSeconds/util.SECONDS_IN_MINUTE,
-			util.MINUTES_IN_HOUR,
-		)
-		if !entryInWorklogs {
-			newTicketEntries = append(newTicketEntries, ticketEntry)
-			worklogs = util.Remove(worklogs, worklogToDelete)
-			log.Trace().
-				Str("ticket", ticketEntry.Ticket).
-				Str("comment", ticketEntry.Comment).
-				Int("hours", hours).
-				Int("minutes", minutes).
-				Msg("not submitted yet")
-		} else {
-			workedSeconds += ticketEntry.DurationSeconds
-			log.Info().
-				Str("ticket", ticketEntry.Ticket).
-				Str("comment", ticketEntry.Comment).
-				Int("hours", hours).
-				Int("minutes", minutes).
-				Msg("already submitted")
-		}
-	}
-
 	errs, _ := errgroup.WithContext(context.Background())
 
-	for _, ticket := range newTicketEntries {
+	for _, ticket := range ticketEntries {
 		ticket := ticket // Necessary as of https://go.dev/doc/faq#closures_and_goroutines
 		errs.Go(func() error {
-			if err := t.Api.CreateWorklog(ticket.Ticket, ticket.Comment, ticket.DurationSeconds, note); err != nil {
+			if err := t.Api.CreateWorklog(ticket.Ticket, ticket.Comment, ticket.DurationSeconds, day); err != nil {
 				return err
 			}
 			workedSeconds += ticket.DurationSeconds
