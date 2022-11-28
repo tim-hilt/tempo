@@ -11,9 +11,7 @@ import (
 	"github.com/yuin/goldmark/text"
 )
 
-type applyFunc func(child ast.Node) error
-
-func applyOnChildren(parent ast.Node, kind string, fun applyFunc) error {
+func applyOnChildren(parent ast.Node, kind string, fun func(child ast.Node) error) error {
 	child := parent.FirstChild()
 	for child != nil {
 		if child.Kind().String() == kind {

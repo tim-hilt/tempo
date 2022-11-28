@@ -59,7 +59,7 @@ func (t *Tempo) WatchNotes() {
 	}
 }
 
-func (t Tempo) watchLoop() error {
+func (t *Tempo) watchLoop() error {
 	debounceDuration := 15 * time.Second
 	debounced := debounce.New(debounceDuration)
 	for {
@@ -70,20 +70,21 @@ func (t Tempo) watchLoop() error {
 			}
 			modifiedFile := event.Name
 			if event.Has(fsnotify.Write) && isDailyNote(modifiedFile) {
-				log.Info().
+				log.Trace().
 					Str("file", modifiedFile).
 					Msg("file modification")
 				// use debounce if file not set or same file edited
 				if changedFile == util.NO_CHANGED_FILES || changedFile == modifiedFile {
 					changedFile = modifiedFile
-					log.Info().
+					// TODO: Theoretically we could detect changed ticket-Tables here directly
+					// and abort the submit
+					log.Trace().
 						Str("lastModified", changedFile).
 						Str("duration", debounceDuration.String()).
 						Msg("submitting file in")
 					debounced(t.submitChanged)
-					// submit last file directly otherwise
-				} else {
-					log.Info().
+				} else { // submit last file directly otherwise
+					log.Trace().
 						Str("lastModified", changedFile).
 						Str("newlyModified", modifiedFile).
 						Msg("debounce interrupted. submitting last modified file immediately")
@@ -125,7 +126,7 @@ func isDailyNote(file string) bool {
 	return false
 }
 
-func (t Tempo) submitChanged() {
+func (t *Tempo) submitChanged() {
 	if changedFile == util.NO_CHANGED_FILES {
 		log.Info().Msg("no changed file")
 		return

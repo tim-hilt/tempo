@@ -12,7 +12,7 @@ import (
 	"github.com/tim-hilt/tempo/util/config"
 )
 
-func (t Tempo) boilerPlate(month string) *[]api.SearchWorklogsResult {
+func (t *Tempo) boilerPlate(month string) *[]api.SearchWorklogsResult {
 	start, err := time.Parse(util.MONTH_FORMAT, month)
 
 	if err != nil {
@@ -30,7 +30,7 @@ func (t Tempo) boilerPlate(month string) *[]api.SearchWorklogsResult {
 	return worklogs
 }
 
-func (t Tempo) GetMonthlyHours(month string) {
+func (t *Tempo) GetMonthlyHours(month string) {
 	worklogs := t.boilerPlate(month)
 
 	bookedTimeSeconds := 0
@@ -43,7 +43,7 @@ func (t Tempo) GetMonthlyHours(month string) {
 		fmt.Sprintf("%02d", hours) + ":" + fmt.Sprintf("%02d", minutes))
 }
 
-func (t Tempo) GetWorklogsForDay(day string) {
+func (t *Tempo) GetWorklogsForDay(day string) {
 	worklogs, err := t.Api.FindWorklogsInRange(day, day)
 
 	if err != nil {
@@ -82,7 +82,7 @@ func (t Tempo) GetWorklogsForDay(day string) {
 }
 
 // TODO: Doesn't work for days that are used to bring down overtime
-func (t Tempo) GetMonthlyOvertime(month string) {
+func (t *Tempo) GetMonthlyOvertime(month string) {
 	worklogs := t.boilerPlate(month)
 
 	var workedSeconds float64 = 0
@@ -105,7 +105,7 @@ func (t Tempo) GetMonthlyOvertime(month string) {
 	fmt.Println("Overtime for " + month + ": " + fmt.Sprint(overtime) + " hours")
 }
 
-func (t Tempo) GetWorklogsForTicket(ticket string) {
+func (t *Tempo) GetWorklogsForTicket(ticket string) {
 	worklogs, err := t.Api.FindWorklogsForTicket(ticket)
 
 	if err != nil {
