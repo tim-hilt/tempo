@@ -25,7 +25,7 @@ type SearchWorklogsResult struct {
 	TempoWorklogId  int    `json:"tempoWorklogId"`
 	DurationSeconds int    `json:"timeSpentSeconds"`
 	Issue           issue  `json:"issue"`
-	DateTime        string `json:"dateCreated"`
+	DateTime        string `json:"started"`
 }
 
 func New(user string, password string) *Api {
