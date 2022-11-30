@@ -8,12 +8,15 @@ require (
 	github.com/charmbracelet/bubbletea v0.22.1
 	github.com/charmbracelet/lipgloss v0.6.0
 	github.com/fsnotify/fsnotify v1.6.0
+	github.com/go-playground/validator/v10 v10.11.1
 	github.com/go-resty/resty/v2 v2.7.0
+	github.com/google/go-cmp v0.5.9
 	github.com/rs/zerolog v1.28.0
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/viper v1.13.0
 	github.com/yuin/goldmark v1.5.2
 	golang.org/x/exp v0.0.0-20221031165847-c99f073a8326
+	golang.org/x/sync v0.1.0
 )
 
 require (
@@ -21,8 +24,6 @@ require (
 	github.com/containerd/console v1.0.3 // indirect
 	github.com/go-playground/locales v0.14.0 // indirect
 	github.com/go-playground/universal-translator v0.18.0 // indirect
-	github.com/go-playground/validator/v10 v10.11.1 // indirect
-	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.0.1 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
@@ -47,7 +48,6 @@ require (
 	github.com/subosito/gotenv v1.4.1 // indirect
 	golang.org/x/crypto v0.0.0-20220411220226-7b82a4e95df4 // indirect
 	golang.org/x/net v0.1.0 // indirect
-	golang.org/x/sync v0.1.0 // indirect
 	golang.org/x/sys v0.1.0 // indirect
 	golang.org/x/term v0.1.0 // indirect
 	golang.org/x/text v0.4.0 // indirect
