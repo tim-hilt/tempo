@@ -1,6 +1,11 @@
 name: Build and Test
 
-on: [push, pull_request]
+on:
+  push:
+    paths-ignore:
+      - "**.md"
+      - "LICENCE"
+      - ".vscode/**"
 
 jobs:
   build:
