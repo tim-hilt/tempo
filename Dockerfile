@@ -9,7 +9,7 @@ RUN go mod download && go mod verify
 
 COPY . .
 RUN go build -v ./...
-RUN go test ./...
+RUN go test  -race -coverprofile=coverage.out -covermode=atomic
 
 # Upload codecov-results
 RUN curl -Os https://uploader.codecov.io/latest/linux/codecov && chmod +x codecov && ./codecov
