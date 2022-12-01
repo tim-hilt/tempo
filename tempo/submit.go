@@ -11,12 +11,14 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
+// TODO: Don't permit submitting day from last month! Booking already closed
 func (t *Tempo) SubmitDay(day string) {
 	if err := t.submit(day); err != nil {
 		log.Fatal().Err(err).Str("day", day).Msg("error when submitting")
 	}
 }
 
+// TODO: Don't permit submitting day from last month! Booking already closed
 func (t *Tempo) submit(day string) error {
 	ticketEntries, err := noteparser.ParseDailyNote(day)
 

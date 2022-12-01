@@ -126,6 +126,7 @@ func isDailyNote(file string) bool {
 	return false
 }
 
+// TODO: Don't permit submitting day from last month! Booking already closed
 func (t *Tempo) submitChanged() {
 	if changedFile == util.NO_CHANGED_FILES {
 		log.Info().Msg("no changed file")
