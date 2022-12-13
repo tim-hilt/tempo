@@ -21,9 +21,10 @@ func init() {
 }
 
 func submit(cmd *cobra.Command, args []string) {
-	day := parse.ParseDateArg(args)
+	date := parse.ParseDateArg(args)
 
 	user, password := config.GetCredentials()
 	tempoClient := tempo.New(user, password)
-	tempoClient.SubmitDay(day)
+	// TODO: Should also take month, not only day
+	tempoClient.SubmitDay(date)
 }
