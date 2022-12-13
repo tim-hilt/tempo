@@ -14,7 +14,6 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-// TODO: Don't permit submitting day from last month! Booking already closed
 // TODO: Should expect a Time-instance. Not string
 func (t *Tempo) SubmitDay(day string) {
 	if err := t.submit(day); err != nil {
@@ -22,33 +21,25 @@ func (t *Tempo) SubmitDay(day string) {
 	}
 }
 
-// TODO: Should expect a Time-instance. Not string
-func dayNotOlderThanOneMonth(day string) error {
+func fromPreviousMonths(day time.Time) bool {
 	now := time.Now()
 	currentYear, currentMonth, _ := now.Date()
 	currentLocation := now.Location()
 
 	firstOfMonth := time.Date(currentYear, currentMonth, 1, 0, 0, 0, 0, currentLocation)
-	d, err := time.Parse(util.DATE_FORMAT, day)
+	return day.Before(firstOfMonth)
+}
 
-	// TODO: This has to be caught earlier!
+// TODO: Should expect a Time-instance. Not string
+func (t *Tempo) submit(day string) error {
+
+	d, err := time.Parse(util.DATE_FORMAT, day)
 	if err != nil {
 		return err
 	}
 
-	if firstOfMonth.Before(d) {
-		return nil
-	}
-
-	return errors.New("day " + fmt.Sprint(d) + " is older than current month")
-}
-
-// TODO: Don't permit submitting day from last month! Booking already closed
-// TODO: Should expect a Time-instance. Not string
-func (t *Tempo) submit(day string) error {
-
-	if err := dayNotOlderThanOneMonth(day); err != nil {
-		return err
+	if fromPreviousMonths(d) {
+		return errors.New("day " + fmt.Sprint(d) + " is older than current month")
 	}
 
 	ticketEntries, err := noteparser.ParseDailyNote(day)
