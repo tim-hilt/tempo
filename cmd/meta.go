@@ -49,13 +49,13 @@ func init() {
 		rootCmd.PersistentFlags().Lookup(config.PASSWORD_FLAG_VAL),
 	)
 
-	rootCmd.PersistentFlags().StringP(config.JIRA_USER_FLAG_VAL, "juid", "", "The Jira-User-ID")
+	rootCmd.PersistentFlags().String(config.JIRA_USER_FLAG_VAL, "", "The Jira-User-ID")
 	viper.BindPFlag(
 		config.JIRA_USER_CONFIG_VAL,
 		rootCmd.PersistentFlags().Lookup(config.JIRA_USER_FLAG_VAL),
 	)
 
-	rootCmd.PersistentFlags().StringP(config.TEMPO_TOKEN_FLAG_VAL, "tt", "", "The Tempo Api Token")
+	rootCmd.PersistentFlags().String(config.TEMPO_TOKEN_FLAG_VAL, "", "The Tempo Api Token")
 	viper.BindPFlag(
 		config.TEMPO_TOKEN_CONFIG_VAL,
 		rootCmd.PersistentFlags().Lookup(config.TEMPO_TOKEN_FLAG_VAL),
