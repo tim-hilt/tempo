@@ -28,9 +28,16 @@ type SearchWorklogsResult struct {
 	DateTime        string `json:"started"`
 }
 
-func New(user string, password string) *Api {
+func New() *Api {
 	apiClient := resty.New()
-	apiClient.SetBasicAuth(user, password)
+
+	if config.HasTempoApiToken() {
+		apiClient.SetQueryParam("tempoApiToken", config.GetTempoApiToken())
+	} else {
+		user, password := config.GetCredentials()
+		apiClient.SetBasicAuth(user, password)
+	}
+
 	apiClient.SetDebug(config.DebugEnabled())
 
 	tempo := &Api{client: apiClient}
@@ -39,7 +46,7 @@ func New(user string, password string) *Api {
 	if err != nil {
 		log.Fatal().
 			Err(err).
-			Msg("error when getting user-id")
+			Msg("error when initializing Jira User ID")
 	}
 
 	return tempo
@@ -58,6 +65,12 @@ type errorResponse struct {
 }
 
 func (a *Api) initUser() error {
+
+	if config.HasTempoApiToken() {
+		a.UserId = config.GetJiraUserId()
+		return nil
+	}
+
 	log.Info().Msg("Started getting userId")
 
 	resp, err := a.client.R().

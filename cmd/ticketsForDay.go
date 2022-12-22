@@ -4,7 +4,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/tim-hilt/tempo/cmd/parse"
 	"github.com/tim-hilt/tempo/tempo"
-	"github.com/tim-hilt/tempo/util/config"
 )
 
 // worklogsForDayCmd represents the ticketsForDay command
@@ -19,9 +18,7 @@ var worklogsForDayCmd = &cobra.Command{
 func worklogsForDay(cmd *cobra.Command, args []string) {
 	date := parse.ParseDateArg(args)
 
-	user, password := config.GetCredentials()
-	tempoClient := tempo.New(user, password)
-	tempoClient.GetWorklogsForDay(date)
+	tempo.New().GetWorklogsForDay(date)
 }
 
 func init() {

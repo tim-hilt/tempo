@@ -10,8 +10,8 @@ type Tempo struct {
 	PreviousTicketEntries []parser.DailyNoteEntry
 }
 
-func New(user string, password string) *Tempo {
-	api := api.New(user, password)
+func New() *Tempo {
+	api := api.New()
 	tempo := &Tempo{Api: api, PreviousTicketEntries: []parser.DailyNoteEntry{}}
 	return tempo
 }

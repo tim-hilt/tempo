@@ -31,6 +31,18 @@ func GetCredentials() (string, string) {
 	return viper.GetString(USER_CONFIG_VAL), viper.GetString(PASSWORD_CONFIG_VAL)
 }
 
+func GetJiraUserId() string {
+	return viper.GetString(JIRA_USER_CONFIG_VAL)
+}
+
+func GetTempoApiToken() string {
+	return viper.GetString(TEMPO_TOKEN_CONFIG_VAL)
+}
+
+func HasTempoApiToken() bool {
+	return viper.IsSet(JIRA_USER_CONFIG_VAL) && viper.IsSet(TEMPO_TOKEN_CONFIG_VAL)
+}
+
 func GetHost() string {
 	return viper.GetString(HOST_CONFIG_VAL)
 }
@@ -72,6 +84,8 @@ func Validate() {
 	config := configParams{
 		User:           user,
 		Password:       password,
+		JiraUserId:     GetJiraUserId(),
+		TempoApiToken:  GetTempoApiToken(),
 		JiraHost:       GetHost(),
 		Notesdir:       GetNotesdir(),
 		Loglevel:       GetLoglevel(),

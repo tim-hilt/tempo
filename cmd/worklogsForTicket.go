@@ -3,7 +3,6 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 	"github.com/tim-hilt/tempo/tempo"
-	"github.com/tim-hilt/tempo/util/config"
 )
 
 // worklogsForTicketCmd represents the worklogsForTicket command
@@ -18,9 +17,7 @@ var worklogsForTicketCmd = &cobra.Command{
 func worklogsForTicket(cmd *cobra.Command, args []string) {
 	ticket := args[0]
 
-	user, password := config.GetCredentials()
-	tempoClient := tempo.New(user, password)
-	tempoClient.GetWorklogsForTicket(ticket)
+	tempo.New().GetWorklogsForTicket(ticket)
 }
 
 func init() {

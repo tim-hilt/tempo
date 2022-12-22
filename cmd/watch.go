@@ -3,7 +3,6 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 	"github.com/tim-hilt/tempo/tempo"
-	"github.com/tim-hilt/tempo/util/config"
 )
 
 // watchCmd represents the watch command
@@ -16,9 +15,7 @@ var watchCmd = &cobra.Command{
 }
 
 func watch(cmd *cobra.Command, args []string) {
-	user, password := config.GetCredentials()
-	tempoClient := tempo.New(user, password)
-	tempoClient.WatchNotes()
+	tempo.New().WatchNotes()
 }
 
 func init() {

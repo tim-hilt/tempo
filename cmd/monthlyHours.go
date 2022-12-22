@@ -4,7 +4,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/tim-hilt/tempo/cmd/parse"
 	"github.com/tim-hilt/tempo/tempo"
-	"github.com/tim-hilt/tempo/util/config"
 )
 
 func init() {
@@ -23,7 +22,5 @@ var monthlyHoursCmd = &cobra.Command{
 func monthlyHours(cmd *cobra.Command, args []string) {
 	month := parse.ParseMonthArg(args)
 
-	user, password := config.GetCredentials()
-	tempoClient := tempo.New(user, password)
-	tempoClient.GetMonthlyHours(month)
+	tempo.New().GetMonthlyHours(month)
 }

@@ -20,15 +20,17 @@ var overtimeForMonthCmd = &cobra.Command{
 func overtimeForMonth(cmd *cobra.Command, args []string) {
 	month := parse.ParseMonthArg(args)
 
-	user, password := config.GetCredentials()
-	tempoClient := tempo.New(user, password)
-	tempoClient.GetMonthlyOvertime(month)
+	tempo.New().GetMonthlyOvertime(month)
 }
 
 func init() {
 	getCmd.AddCommand(overtimeForMonthCmd)
 
-	rootCmd.PersistentFlags().IntP(config.DAILYWORKHOURS_FLAG_VAL, "w", 8, "Number of daily working-hours")
-	viper.BindPFlag(config.DAILYWORKHOURS_CONFIG_VAL, rootCmd.PersistentFlags().Lookup(config.DAILYWORKHOURS_FLAG_VAL))
+	rootCmd.PersistentFlags().
+		IntP(config.DAILYWORKHOURS_FLAG_VAL, "w", 8, "Number of daily working-hours")
+	viper.BindPFlag(
+		config.DAILYWORKHOURS_CONFIG_VAL,
+		rootCmd.PersistentFlags().Lookup(config.DAILYWORKHOURS_FLAG_VAL),
+	)
 	viper.SetDefault(config.DAILYWORKHOURS_CONFIG_VAL, 8)
 }

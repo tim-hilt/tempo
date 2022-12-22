@@ -4,7 +4,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/tim-hilt/tempo/cmd/parse"
 	"github.com/tim-hilt/tempo/tempo"
-	"github.com/tim-hilt/tempo/util/config"
 )
 
 // submitCmd represents the submit command
@@ -23,8 +22,6 @@ func init() {
 func submit(cmd *cobra.Command, args []string) {
 	date := parse.ParseDateArg(args)
 
-	user, password := config.GetCredentials()
-	tempoClient := tempo.New(user, password)
 	// TODO: Should also take month, not only day
-	tempoClient.SubmitDay(date)
+	tempo.New().SubmitDay(date)
 }
