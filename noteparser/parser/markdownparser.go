@@ -1,7 +1,8 @@
 package parser
 
 import (
-	"github.com/rs/zerolog/log"
+	"errors"
+
 	"github.com/tim-hilt/tempo/util"
 	"github.com/tim-hilt/tempo/util/config"
 	"github.com/tim-hilt/tempo/util/set"
@@ -27,7 +28,7 @@ func applyOnChildren(parent ast.Node, kind string, fun func(child ast.Node) erro
 
 type MarkdownParser struct{}
 
-func (m MarkdownParser) findTicketTable(file []byte) ast.Node {
+func (m MarkdownParser) findTicketTable(file []byte) (ast.Node, error) {
 	document := goldmark.New(goldmark.WithExtensions(extension.Table)).
 		Parser().Parse(text.NewReader(file))
 
@@ -40,9 +41,9 @@ func (m MarkdownParser) findTicketTable(file []byte) ast.Node {
 	})
 
 	if ticketTable == nil {
-		log.Fatal().Msg("ticket table not found")
+		return nil, errors.New("ticket table not found")
 	}
-	return ticketTable
+	return ticketTable, nil
 }
 
 func (m MarkdownParser) getTableHeaders(table ast.Node, file []byte) set.Set[string] {
@@ -111,7 +112,12 @@ func (m MarkdownParser) parseTicketEntries(
 
 // This function suffices to satisfy the parser-interface
 func (m MarkdownParser) parseDailyNote(dailyNote []byte) ([]DailyNoteEntry, error) {
-	ticketTable := m.findTicketTable(dailyNote)
+	ticketTable, err := m.findTicketTable(dailyNote)
+
+	if err != nil {
+		return nil, err
+	}
+
 	ticketEntries, err := m.parseTicketEntries(ticketTable, dailyNote)
 
 	if err != nil {

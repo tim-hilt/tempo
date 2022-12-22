@@ -33,36 +33,40 @@ func init() {
 
 	rootCmd.PersistentFlags().
 		IntP(config.LOGLEVEL_FLAG_VAL, "l", 0, "Logging-level, -1 (trace) to 5 (panic)")
-	rootCmd.PersistentFlags().StringP(config.USER_FLAG_VAL, "u", "", "The Jira-User")
-	rootCmd.PersistentFlags().
-		StringP(config.PASSWORD_FLAG_VAL, "p", "", "The Password for the Jira-User")
-	rootCmd.PersistentFlags().
-		StringP(config.NOTESDIR_FLAG_VAL, "n", "", "The directory of the daily notes")
-	rootCmd.PersistentFlags().String(config.HOST_FLAG_VAL, "", "The host of the Jira-instance")
-	rootCmd.PersistentFlags().
-		Bool(config.DEBUG_ENABLED_FLAG_VAL, false, "Whether debugging-information should be enabled for the rest-calls")
-
 	viper.BindPFlag(
 		config.LOGLEVEL_CONFIG_VAL,
 		rootCmd.PersistentFlags().Lookup(config.LOGLEVEL_FLAG_VAL),
 	)
+	viper.SetDefault(config.LOGLEVEL_CONFIG_VAL, 3)
+
+	rootCmd.PersistentFlags().StringP(config.USER_FLAG_VAL, "u", "", "The Jira-User")
 	viper.BindPFlag(config.USER_CONFIG_VAL, rootCmd.PersistentFlags().Lookup(config.USER_FLAG_VAL))
+
+	rootCmd.PersistentFlags().
+		StringP(config.PASSWORD_FLAG_VAL, "p", "", "The Password for the Jira-User")
 	viper.BindPFlag(
 		config.PASSWORD_CONFIG_VAL,
 		rootCmd.PersistentFlags().Lookup(config.PASSWORD_FLAG_VAL),
 	)
+
+	rootCmd.PersistentFlags().
+		StringP(config.NOTESDIR_FLAG_VAL, "n", "", "The directory of the daily notes")
 	viper.BindPFlag(
 		config.NOTESDIR_CONFIG_VAL,
 		rootCmd.PersistentFlags().Lookup(config.NOTESDIR_FLAG_VAL),
 	)
+	viper.SetDefault(config.NOTESDIR_CONFIG_VAL, ".")
+
+	rootCmd.PersistentFlags().String(config.HOST_FLAG_VAL, "", "The host of the Jira-instance")
 	viper.BindPFlag(config.HOST_CONFIG_VAL, rootCmd.PersistentFlags().Lookup(config.HOST_FLAG_VAL))
+
+	rootCmd.PersistentFlags().
+		Bool(config.DEBUG_ENABLED_FLAG_VAL, false, "Whether debugging-information should be enabled for the rest-calls")
 	viper.BindPFlag(
 		config.DEBUG_ENABLED_CONFIG_VAL,
 		rootCmd.PersistentFlags().Lookup(config.DEBUG_ENABLED_FLAG_VAL),
 	)
 
-	viper.SetDefault(config.LOGLEVEL_CONFIG_VAL, 3)
-	viper.SetDefault(config.NOTESDIR_CONFIG_VAL, ".")
 	viper.SetDefault(config.TICKETS_COLUMN_CONFIG_VAL, "Ticket")
 	viper.SetDefault(config.COMMENTS_COLUMN_CONFIG_VAL, "Comment")
 	viper.SetDefault(config.DURATIONS_COLUMN_CONFIG_VAL, "Duration")
