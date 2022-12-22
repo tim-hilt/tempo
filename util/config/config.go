@@ -16,8 +16,10 @@ type columns struct {
 }
 
 type configParams struct {
-	User           string `validate:"required"`
-	Password       string `validate:"required"`
+	User           string `validate:"required_without=JiraUserId TempoApiToken"`
+	Password       string `validate:"required_without=JiraUserId TempoApiToken"`
+	JiraUserId     string `validate:"required_with=TempoApiToken"`
+	TempoApiToken  string `validate:"required_with=JiraUserId"`
 	Notesdir       string `validate:"required,dir"`
 	JiraHost       string `validate:"required,url"`
 	Loglevel       int    `validate:"gte=-1,lte=5"`

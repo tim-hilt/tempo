@@ -7,6 +7,12 @@ const (
 	PASSWORD_CONFIG_VAL = "password"
 	PASSWORD_FLAG_VAL   = "password"
 
+	JIRA_USER_FLAG_VAL   = "jiraUserId"
+	JIRA_USER_CONFIG_VAL = "jiraUserId"
+
+	TEMPO_TOKEN_FLAG_VAL   = "tempoApiToken"
+	TEMPO_TOKEN_CONFIG_VAL = "tempoApiToken"
+
 	NOTESDIR_CONFIG_VAL = "notesDir"
 	NOTESDIR_FLAG_VAL   = "notesdir"
 
