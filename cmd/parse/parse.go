@@ -1,7 +1,6 @@
 package parse
 
 import (
-	"regexp"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -10,35 +9,36 @@ import (
 
 func ParseDateArg(args []string) string {
 	dateArg := args[0]
+
 	if dateArg == "today" {
 		return time.Now().Format(util.DATE_FORMAT)
-	} else {
-		validateDate(dateArg)
-		return dateArg
+	} else if dateArg == "month" {
+		return time.Now().Format(util.MONTH_FORMAT)
 	}
-}
 
-func validateDate(date string) {
-	if match, _ := regexp.MatchString(`\d{4}-\d{2}-\d{2}`, date); !match {
-		log.Fatal().Str("date", date).Msg("date isn't correctly formatted")
+	if !util.IsFullDate(dateArg) {
+		log.Fatal().
+			Str("date", dateArg).
+			Msg("date isn't correctly formatted; expected " + util.DATE_FORMAT)
 	}
+
+	return dateArg
 }
 
 func ParseMonthArg(args []string) string {
 	var month string
+
 	if len(args) == 0 {
 		month = time.Now().Format(util.MONTH_FORMAT)
 	} else if len(args) == 1 {
 		month = args[0]
 	}
 
-	validateMonth(month)
+	if !util.IsYearMonth(month) {
+		log.Fatal().
+			Str("date", month).
+			Msg("date isn't correctly formatted; expected " + util.MONTH_FORMAT)
+	}
 
 	return month
-}
-
-func validateMonth(date string) {
-	if match, _ := regexp.MatchString(`\d{4}-\d{2}`, date); !match {
-		log.Fatal().Str("date", date).Msg("date isn't correctly formatted")
-	}
 }

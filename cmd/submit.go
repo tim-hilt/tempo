@@ -22,6 +22,5 @@ func init() {
 func submit(cmd *cobra.Command, args []string) {
 	date := parse.ParseDateArg(args)
 
-	// TODO: Should also take month, not only day
-	tempo.New().SubmitDay(date)
+	tempo.New().SubmitDate(date)
 }

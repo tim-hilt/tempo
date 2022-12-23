@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
+	"strings"
 	"time"
 
 	"github.com/google/go-cmp/cmp"
@@ -14,14 +16,64 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-// TODO: Should expect a Time-instance. Not string
-func (t *Tempo) SubmitDay(day string) {
-	if err := t.submit(day); err != nil {
-		log.Fatal().Err(err).Str("day", day).Msg("error when submitting")
+func (t *Tempo) SubmitDate(date string) {
+
+	if util.IsFullDate(date) {
+		if err := t.submit(date); err != nil {
+			log.Fatal().Err(err).Str("day", date).Msg("error when submitting")
+		}
+	} else if util.IsYearMonth(date) {
+		if err := t.submitMonth(); err != nil {
+			log.Fatal().Err(err).Str("month", date).Msg("error when submitting")
+		}
 	}
 }
 
-func fromPreviousMonths(day time.Time) bool {
+func (t *Tempo) submitMonth() error {
+	notesDir := config.GetNotesdir()
+	fs, err := os.ReadDir(notesDir)
+
+	if err != nil {
+		return errors.New("error when reading directory")
+	}
+
+	toSubmit := []string{}
+
+	for _, f := range fs {
+		fn := strings.TrimSuffix(f.Name(), ".md")
+		if f.Type().IsRegular() && util.IsFullDate(fn) {
+			d, err := time.Parse(util.DATE_FORMAT, fn)
+
+			if err != nil {
+				return errors.New("error parsing to time.Time, expected format " + util.DATE_FORMAT)
+			}
+
+			if !olderThanCurrentMonth(d) {
+				toSubmit = append(toSubmit, fn)
+			}
+		}
+	}
+
+	errs, _ := errgroup.WithContext(context.Background())
+
+	for _, d := range toSubmit {
+		d := d // Necessary as of https://go.dev/doc/faq#closures_and_goroutines
+		errs.Go(func() error {
+			if err := t.submit(d); err != nil {
+				return err
+			}
+			return err
+		})
+	}
+
+	if err := errs.Wait(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func olderThanCurrentMonth(day time.Time) bool {
 	now := time.Now()
 	currentYear, currentMonth, _ := now.Date()
 	currentLocation := now.Location()
@@ -30,7 +82,6 @@ func fromPreviousMonths(day time.Time) bool {
 	return day.Before(firstOfMonth)
 }
 
-// TODO: Should expect a Time-instance. Not string
 func (t *Tempo) submit(day string) error {
 
 	d, err := time.Parse(util.DATE_FORMAT, day)
@@ -38,7 +89,7 @@ func (t *Tempo) submit(day string) error {
 		return err
 	}
 
-	if fromPreviousMonths(d) {
+	if olderThanCurrentMonth(d) {
 		return errors.New("day " + fmt.Sprint(d) + " is older than current month")
 	}
 
