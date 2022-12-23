@@ -33,10 +33,10 @@ func New() *Api {
 
 	if config.HasTempoApiToken() {
 		apiClient.SetQueryParam("tempoApiToken", config.GetTempoApiToken())
-	} else {
-		user, password := config.GetCredentials()
-		apiClient.SetBasicAuth(user, password)
 	}
+
+	user, password := config.GetCredentials()
+	apiClient.SetBasicAuth(user, password)
 
 	apiClient.SetDebug(config.DebugEnabled())
 
@@ -66,7 +66,7 @@ type errorResponse struct {
 
 func (a *Api) initUser() error {
 
-	if config.HasTempoApiToken() {
+	if config.HasJiraUserId() {
 		a.UserId = config.GetJiraUserId()
 		return nil
 	}
