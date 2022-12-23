@@ -16,10 +16,10 @@ type columns struct {
 }
 
 type configParams struct {
-	User           string `validate:"required_without=JiraUserId TempoApiToken"`
-	Password       string `validate:"required_without=JiraUserId TempoApiToken"`
-	JiraUserId     string `validate:"required_with=TempoApiToken"`
-	TempoApiToken  string `validate:"required_with=JiraUserId"`
+	User           string `validate:"required"`
+	Password       string `validate:"required"`
+	JiraUserId     string
+	TempoApiToken  string
 	Notesdir       string `validate:"required,dir"`
 	JiraHost       string `validate:"required,url"`
 	Loglevel       int    `validate:"gte=-1,lte=5"`
@@ -35,12 +35,16 @@ func GetJiraUserId() string {
 	return viper.GetString(JIRA_USER_CONFIG_VAL)
 }
 
+func HasJiraUserId() bool {
+	return viper.IsSet(JIRA_USER_CONFIG_VAL)
+}
+
 func GetTempoApiToken() string {
 	return viper.GetString(TEMPO_TOKEN_CONFIG_VAL)
 }
 
 func HasTempoApiToken() bool {
-	return viper.IsSet(JIRA_USER_CONFIG_VAL) && viper.IsSet(TEMPO_TOKEN_CONFIG_VAL)
+	return viper.IsSet(TEMPO_TOKEN_CONFIG_VAL)
 }
 
 func GetHost() string {
