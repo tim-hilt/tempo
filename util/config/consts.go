@@ -1,14 +1,14 @@
 package config
 
 const (
-	USER_CONFIG_VAL = "jiraUser"
-	USER_FLAG_VAL   = "jirauser"
+	USER_CONFIG_VAL = "user"
+	USER_FLAG_VAL   = "user"
 
 	PASSWORD_CONFIG_VAL = "password"
 	PASSWORD_FLAG_VAL   = "password"
 
-	JIRA_USER_FLAG_VAL   = "jiraUserId"
-	JIRA_USER_CONFIG_VAL = "jiraUserId"
+	JIRA_USER_FLAG_VAL   = "jiraUser"
+	JIRA_USER_CONFIG_VAL = "jiraUser"
 
 	TEMPO_TOKEN_FLAG_VAL   = "tempoApiToken"
 	TEMPO_TOKEN_CONFIG_VAL = "tempoApiToken"

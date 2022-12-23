@@ -92,8 +92,6 @@ func initConfig() {
 	viper.SetConfigType("yaml")
 	viper.SetConfigName("tempo")
 
-	viper.AutomaticEnv()
-
 	err = viper.ReadInConfig()
 	cobra.CheckErr(err)
 }
