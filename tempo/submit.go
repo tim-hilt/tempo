@@ -3,7 +3,6 @@ package tempo
 import (
 	"context"
 	"errors"
-	"fmt"
 	"os"
 	"strings"
 	"time"
@@ -18,9 +17,22 @@ import (
 func (t *Tempo) SubmitDate(date string) {
 
 	if util.IsFullDate(date) {
+		d, err := time.Parse(util.DATE_FORMAT, date)
+		if err != nil {
+			log.Fatal().
+				Str("date", date).
+				Str("format", util.DATE_FORMAT).
+				Msg("error when parsing to date")
+		}
+
+		if util.FromPreviousMonths(d) {
+			log.Fatal().Str("date", date).Msg("date is from previous month. Won't submit.")
+		}
+
 		if err := t.submit(date); err != nil {
 			log.Fatal().Err(err).Str("day", date).Msg("error when submitting")
 		}
+
 	} else if util.IsYearMonth(date) {
 		if err := t.submitMonth(); err != nil {
 			log.Fatal().Err(err).Str("month", date).Msg("error when submitting")
@@ -73,18 +85,7 @@ func (t *Tempo) submitMonth() error {
 }
 
 func (t *Tempo) submit(day string) error {
-
-	d, err := time.Parse(util.DATE_FORMAT, day)
-	if err != nil {
-		return err
-	}
-
-	// TODO: This logic should be one level up. -> DRY
-	if util.FromPreviousMonths(d) {
-		return errors.New("day " + fmt.Sprint(d) + " is older than current month")
-	}
-
-	// TODO: This is already done in the watch-command. Should not be part of this function anymore
+	// TODO: Can we get rid of this? Maybe with optional params?
 	ticketEntries, err := noteparser.ParseDailyNote(day)
 
 	if err != nil {
