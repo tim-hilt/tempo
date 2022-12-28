@@ -2,16 +2,14 @@ package tempo
 
 import (
 	"github.com/tim-hilt/tempo/api"
-	"github.com/tim-hilt/tempo/noteparser/parser"
 )
 
 type Tempo struct {
-	Api                   *api.Api
-	PreviousTicketEntries []parser.DailyNoteEntry
+	Api *api.Api
 }
 
 func New() *Tempo {
 	api := api.New()
-	tempo := &Tempo{Api: api, PreviousTicketEntries: []parser.DailyNoteEntry{}}
+	tempo := &Tempo{Api: api}
 	return tempo
 }

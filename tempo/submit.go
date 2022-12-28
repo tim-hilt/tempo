@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/rs/zerolog/log"
 	"github.com/tim-hilt/tempo/noteparser"
 	"github.com/tim-hilt/tempo/util"
@@ -48,7 +47,7 @@ func (t *Tempo) submitMonth() error {
 				return errors.New("error parsing to time.Time, expected format " + util.DATE_FORMAT)
 			}
 
-			if !olderThanCurrentMonth(d) {
+			if !util.FromPreviousMonths(d) {
 				toSubmit = append(toSubmit, fn)
 			}
 		}
@@ -73,15 +72,6 @@ func (t *Tempo) submitMonth() error {
 	return nil
 }
 
-func olderThanCurrentMonth(day time.Time) bool {
-	now := time.Now()
-	currentYear, currentMonth, _ := now.Date()
-	currentLocation := now.Location()
-
-	firstOfMonth := time.Date(currentYear, currentMonth, 1, 0, 0, 0, 0, currentLocation)
-	return day.Before(firstOfMonth)
-}
-
 func (t *Tempo) submit(day string) error {
 
 	d, err := time.Parse(util.DATE_FORMAT, day)
@@ -89,22 +79,16 @@ func (t *Tempo) submit(day string) error {
 		return err
 	}
 
-	if olderThanCurrentMonth(d) {
+	// TODO: This logic should be one level up. -> DRY
+	if util.FromPreviousMonths(d) {
 		return errors.New("day " + fmt.Sprint(d) + " is older than current month")
 	}
 
+	// TODO: This is already done in the watch-command. Should not be part of this function anymore
 	ticketEntries, err := noteparser.ParseDailyNote(day)
 
 	if err != nil {
 		return err
-	}
-
-	// TODO: This concept doesn't quite work, when dealing with multiple files.
-	// I'd rather need a map [datestring]: []parser.DailyNoteEntry
-	// Also: It isn't relevant for submitting a single file. Maybe I can generalize this?
-	if cmp.Equal(ticketEntries, t.PreviousTicketEntries) {
-		log.Info().Msg("ticketEntries equal. not submitting")
-		return nil
 	}
 
 	worklogs, err := t.Api.FindWorklogsInRange(day, day)
@@ -141,8 +125,6 @@ func (t *Tempo) submit(day string) error {
 	overtimeMinutes := (hours*util.MINUTES_IN_HOUR + minutes) - (config.GetWorkhours() * util.MINUTES_IN_HOUR)
 	overtimeHours, overtimeMinutes := util.Divmod(overtimeMinutes, util.MINUTES_IN_HOUR)
 	log.Trace().Int("overtimeHours", overtimeHours).Int("overtimeMinutes", overtimeMinutes).Msg("")
-
-	t.PreviousTicketEntries = ticketEntries
 
 	return nil
 }

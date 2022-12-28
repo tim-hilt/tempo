@@ -8,19 +8,24 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/bep/debounce"
 	"github.com/fsnotify/fsnotify"
+	"github.com/google/go-cmp/cmp"
 	"github.com/rs/zerolog/log"
+	"github.com/tim-hilt/tempo/noteparser"
+	"github.com/tim-hilt/tempo/noteparser/parser"
 	"github.com/tim-hilt/tempo/util"
 	"github.com/tim-hilt/tempo/util/config"
 	"golang.org/x/sync/errgroup"
 )
 
 var (
-	changedFile = util.NO_CHANGED_FILES
-	watcher     *fsnotify.Watcher
+	changedFiles = make(map[string][]parser.DailyNoteEntry)
+	watcher      *fsnotify.Watcher
+	mut          sync.Mutex
 )
 
 func init() {
@@ -73,23 +78,51 @@ func (t *Tempo) watchLoop() error {
 				log.Trace().
 					Str("file", modifiedFile).
 					Msg("file modification")
-				// use debounce if file not set or same file edited
-				if changedFile == util.NO_CHANGED_FILES || changedFile == modifiedFile {
-					changedFile = modifiedFile
-					// TODO: Theoretically we could detect changed ticket-Tables here directly
-					// and abort the submit
+
+				// TODO: Checking if from previous month is done multiple times now. Can this be made a function?
+				d, err := time.Parse(util.DATE_FORMAT, strings.TrimSuffix(modifiedFile, ".md"))
+				if err != nil {
+					log.Error().
+						Err(err).
+						Str("file", modifiedFile).
+						Str("expectedFormat", util.DATE_FORMAT).
+						Msg("unexpected format")
+					continue
+				}
+
+				if util.FromPreviousMonths(d) {
+					log.Warn().
+						Str("file", modifiedFile).
+						Msg("file from previous months. Won't submit")
+					continue
+				}
+
+				ticketEntries, err := noteparser.ParseDailyNote(modifiedFile)
+
+				if err != nil {
+					log.Error().Err(err).Str("file", modifiedFile).Msg("error when parsing")
+					continue
+				}
+
+				prevTicketEntries := changedFiles[modifiedFile]
+
+				if !cmp.Equal(ticketEntries, prevTicketEntries) {
+					mut.Lock()
+					changedFiles[modifiedFile] = ticketEntries
+					mut.Unlock()
+
+					changedFilenames := make([]string, 0, len(changedFiles))
+					for k := range changedFiles {
+						changedFilenames = append(changedFilenames, k)
+					}
+
 					log.Trace().
-						Str("lastModified", changedFile).
+						Strs("changedFiles", changedFilenames).
 						Str("duration", debounceDuration.String()).
 						Msg("submitting file in")
 					debounced(t.submitChanged)
-				} else { // submit last file directly otherwise
-					log.Trace().
-						Str("lastModified", changedFile).
-						Str("newlyModified", modifiedFile).
-						Msg("debounce interrupted. submitting last modified file immediately")
-					t.submitChanged()
-					changedFile = modifiedFile
+				} else {
+					log.Info().Str("file", modifiedFile).Msg("ticket entries equal. not submitting.")
 				}
 			}
 		case err, ok := <-watcher.Errors:
@@ -120,36 +153,43 @@ func addDirs(watcher *fsnotify.Watcher, dirs []string) {
 
 func isDailyNote(file string) bool {
 	file = filepath.Base(file)
-	if match, _ := regexp.MatchString(`\d{4}-\d{2}-\d{2}.md`, file); match {
-		return true
-	}
-	return false
+	match, _ := regexp.MatchString(`\d{4}-\d{2}-\d{2}.md`, file)
+	return match
 }
 
-// TODO: Don't permit submitting day from last month! Booking already closed
 func (t *Tempo) submitChanged() {
-	if changedFile == util.NO_CHANGED_FILES {
-		log.Info().Msg("no changed file")
-		return
+	mut.Lock()
+	defer mut.Unlock()
+
+	var wg sync.WaitGroup
+	wg.Add(len(changedFiles))
+
+	for changedFile := range changedFiles {
+		changedFile := changedFile
+		go func() {
+			defer wg.Done()
+			// Format file with path to date
+			date := strings.TrimSuffix(filepath.Base(changedFile), ".md")
+
+			log.Info().Str("file", changedFile).Msg("creating worklogs")
+
+			if err := t.submit(date); err != nil {
+				log.Error().
+					Err(err).
+					Str("file", changedFile).
+					Msg("error when submitting tickets")
+				return
+			}
+
+			log.Info().
+				Str("file", changedFile).
+				Msg("finished creating worklogs")
+		}()
+
 	}
 
-	// Format file with path to date
-	date := filepath.Base(changedFile)
-	date = strings.TrimSuffix(date, ".md")
+	wg.Wait()
 
-	log.Info().Str("file", changedFile).Msg("creating worklogs")
-
-	if err := t.submit(date); err != nil {
-		log.Error().
-			Err(err).
-			Str("file", changedFile).
-			Msg("error when submitting tickets")
-		return
-	}
-
-	log.Info().
-		Str("file", changedFile).
-		Msg("finished creating worklogs")
-
-	changedFile = util.NO_CHANGED_FILES
+	// Reset changed files
+	changedFiles = make(map[string][]parser.DailyNoteEntry)
 }

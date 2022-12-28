@@ -3,6 +3,7 @@ package util
 import (
 	"strconv"
 	"strings"
+	"time"
 
 	"golang.org/x/exp/constraints"
 )
@@ -71,4 +72,13 @@ func CalcDurationSeconds(duration string) (int, error) {
 	}
 
 	return (hours*MINUTES_IN_HOUR + minutes) * SECONDS_IN_MINUTE, nil
+}
+
+func FromPreviousMonths(day time.Time) bool {
+	now := time.Now()
+	currentYear, currentMonth, _ := now.Date()
+	currentLocation := now.Location()
+
+	firstOfMonth := time.Date(currentYear, currentMonth, 1, 0, 0, 0, 0, currentLocation)
+	return day.Before(firstOfMonth)
 }
