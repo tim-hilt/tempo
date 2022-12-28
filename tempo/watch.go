@@ -79,7 +79,6 @@ func (t *Tempo) watchLoop() error {
 					Str("file", modifiedFile).
 					Msg("file modification")
 
-				// TODO: Checking if from previous month is done multiple times now. Can this be made a function?
 				d, err := time.Parse(util.DATE_FORMAT, strings.TrimSuffix(modifiedFile, ".md"))
 				if err != nil {
 					log.Error().
@@ -111,13 +110,8 @@ func (t *Tempo) watchLoop() error {
 					changedFiles[modifiedFile] = ticketEntries
 					mut.Unlock()
 
-					changedFilenames := make([]string, 0, len(changedFiles))
-					for k := range changedFiles {
-						changedFilenames = append(changedFilenames, k)
-					}
-
 					log.Trace().
-						Strs("changedFiles", changedFilenames).
+						Strs("changedFiles", util.GetKeys(changedFiles)).
 						Str("duration", debounceDuration.String()).
 						Msg("submitting file in")
 					debounced(t.submitChanged)

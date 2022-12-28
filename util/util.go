@@ -82,3 +82,11 @@ func FromPreviousMonths(day time.Time) bool {
 	firstOfMonth := time.Date(currentYear, currentMonth, 1, 0, 0, 0, 0, currentLocation)
 	return day.Before(firstOfMonth)
 }
+
+func GetKeys[K comparable, V any](m map[K]V) []K {
+	keys := make([]K, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	return keys
+}
