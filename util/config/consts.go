@@ -10,9 +10,6 @@ const (
 	JIRA_USER_FLAG_VAL   = "jiraUser"
 	JIRA_USER_CONFIG_VAL = "jiraUser"
 
-	TEMPO_TOKEN_FLAG_VAL   = "tempoApiToken"
-	TEMPO_TOKEN_CONFIG_VAL = "tempoApiToken"
-
 	NOTESDIR_CONFIG_VAL = "notesDir"
 	NOTESDIR_FLAG_VAL   = "notesdir"
 
