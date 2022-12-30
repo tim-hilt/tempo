@@ -19,7 +19,6 @@ type configParams struct {
 	User           string `validate:"required"`
 	Password       string `validate:"required"`
 	JiraUserId     string
-	TempoApiToken  string
 	Notesdir       string `validate:"required,dir"`
 	JiraHost       string `validate:"required,url"`
 	Loglevel       int    `validate:"gte=-1,lte=5"`
@@ -37,14 +36,6 @@ func GetJiraUserId() string {
 
 func HasJiraUserId() bool {
 	return viper.IsSet(JIRA_USER_CONFIG_VAL)
-}
-
-func GetTempoApiToken() string {
-	return viper.GetString(TEMPO_TOKEN_CONFIG_VAL)
-}
-
-func HasTempoApiToken() bool {
-	return viper.IsSet(TEMPO_TOKEN_CONFIG_VAL)
 }
 
 func GetHost() string {
@@ -89,7 +80,6 @@ func Validate() {
 		User:           user,
 		Password:       password,
 		JiraUserId:     GetJiraUserId(),
-		TempoApiToken:  GetTempoApiToken(),
 		JiraHost:       GetHost(),
 		Notesdir:       GetNotesdir(),
 		Loglevel:       GetLoglevel(),

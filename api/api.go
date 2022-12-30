@@ -31,10 +31,6 @@ type SearchWorklogsResult struct {
 func New() *Api {
 	apiClient := resty.New()
 
-	if config.HasTempoApiToken() {
-		apiClient.SetQueryParam("tempoApiToken", config.GetTempoApiToken())
-	}
-
 	user, password := config.GetCredentials()
 	apiClient.SetBasicAuth(user, password)
 
