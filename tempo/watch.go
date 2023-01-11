@@ -73,13 +73,18 @@ func (t *Tempo) watchLoop() error {
 			if !ok {
 				return errors.New("event not ok")
 			}
-			modifiedFile := event.Name
-			if event.Has(fsnotify.Write) && isDailyNote(modifiedFile) {
-				log.Trace().
-					Str("file", modifiedFile).
-					Msg("file modification")
 
-				d, err := time.Parse(util.DATE_FORMAT, strings.TrimSuffix(modifiedFile, ".md"))
+			log.Trace().
+				Str("file", event.Name).
+				Msg("file modification")
+
+			modifiedFile := strings.TrimSuffix(filepath.Base(event.Name), ".md")
+
+			if event.Has(fsnotify.Write) && isDailyNote(modifiedFile) {
+
+				log.Trace().Str("dailyNote", modifiedFile).Msg("daily note modification")
+
+				d, err := time.Parse(util.DATE_FORMAT, modifiedFile)
 				if err != nil {
 					log.Error().
 						Err(err).
@@ -116,7 +121,7 @@ func (t *Tempo) watchLoop() error {
 						Msg("submitting file in")
 					debounced(t.submitChanged)
 				} else {
-					log.Info().Str("file", modifiedFile).Msg("ticket entries equal. not submitting.")
+					log.Trace().Str("file", modifiedFile).Msg("ticket entries equal. not submitting.")
 				}
 			}
 		case err, ok := <-watcher.Errors:
@@ -147,7 +152,7 @@ func addDirs(watcher *fsnotify.Watcher, dirs []string) {
 
 func isDailyNote(file string) bool {
 	file = filepath.Base(file)
-	match, _ := regexp.MatchString(`\d{4}-\d{2}-\d{2}.md`, file)
+	match, _ := regexp.MatchString(`\d{4}-\d{2}-\d{2}`, file)
 	return match
 }
 
@@ -162,12 +167,9 @@ func (t *Tempo) submitChanged() {
 		changedFile := changedFile
 		go func() {
 			defer wg.Done()
-			// Format file with path to date
-			date := strings.TrimSuffix(filepath.Base(changedFile), ".md")
-
 			log.Info().Str("file", changedFile).Msg("creating worklogs")
 
-			if err := t.submit(date); err != nil {
+			if err := t.submit(changedFile); err != nil {
 				log.Error().
 					Err(err).
 					Str("file", changedFile).
