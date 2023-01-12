@@ -2,110 +2,127 @@ package parser
 
 import (
 	"errors"
+	"strings"
 
 	"github.com/tim-hilt/tempo/util"
 	"github.com/tim-hilt/tempo/util/config"
 	"github.com/tim-hilt/tempo/util/set"
-	"github.com/yuin/goldmark"
-	"github.com/yuin/goldmark/ast"
-	"github.com/yuin/goldmark/extension"
-	"github.com/yuin/goldmark/text"
 )
-
-// TODO: Get rid of goldmark and replace with text-based parser
-func applyOnChildren(parent ast.Node, kind string, fun func(child ast.Node) error) error {
-	child := parent.FirstChild()
-	for child != nil {
-		if child.Kind().String() == kind {
-			err := fun(child)
-			if err != nil {
-				return err
-			}
-		}
-		child = child.NextSibling()
-	}
-	return nil
-}
 
 type MarkdownParser struct{}
 
-func (m MarkdownParser) findTicketTable(file []byte) (ast.Node, error) {
-	document := goldmark.New(goldmark.WithExtensions(extension.Table)).
-		Parser().Parse(text.NewReader(file))
+func (m MarkdownParser) findTicketTable(file []byte) ([]string, error) {
+	lines := strings.Split(string(file), "\n")
+	tableStart := -1
 
-	var ticketTable ast.Node = nil
-	applyOnChildren(document, "Table", func(node ast.Node) error {
-		if m.isTicketTable(node, file) {
-			ticketTable = node
+	for i := 0; i < len(lines); i++ {
+		i, err := findTableStart(lines[i:])
+
+		if err != nil {
+			return nil, err
 		}
-		return nil
-	})
 
-	if ticketTable == nil {
+		if isTicketTable(lines[i]) {
+			tableStart = i
+			break
+		}
+	}
+
+	if tableStart == -1 {
 		return nil, errors.New("ticket table not found")
 	}
-	return ticketTable, nil
+
+	tableEnd := findTableEnd(lines, tableStart)
+
+	return lines[tableStart:tableEnd], nil
 }
 
-func (m MarkdownParser) getTableHeaders(table ast.Node, file []byte) set.Set[string] {
-	headers := set.New[string]()
-	applyOnChildren(table, "TableHeader", func(tableRow ast.Node) error {
-		applyOnChildren(tableRow, "TableCell", func(tableCell ast.Node) error {
-			headers.Add(string(tableCell.Text(file)))
-			return nil
-		})
-		return nil
-	})
-	return headers
+func findTableStart(lines []string) (int, error) {
+	for i, l := range lines {
+		if isTableLine(l) {
+			return i, nil
+		}
+	}
+
+	return -1, errors.New("no table found")
 }
 
-func (m MarkdownParser) isTicketTable(table ast.Node, file []byte) bool {
-	headers := m.getTableHeaders(table, file)
-	columns := config.GetColumns()
-	for _, column := range []string{columns.Tickets, columns.Comments, columns.Durations} {
-		if !headers.Contains(column) {
+func isTableLine(line string) bool {
+	es := strings.Split(line, "|")
+	return len(es) > 3
+}
+
+func isTicketTable(line string) bool {
+	elems := strings.Split(line, "|")
+	s := set.New[string]()
+
+	for _, elem := range elems {
+		e := strings.TrimSpace(elem)
+		if len(e) > 0 {
+			s.Add(e)
+		}
+	}
+
+	cols := config.GetColumns()
+
+	for _, c := range []string{cols.Tickets, cols.Comments, cols.Durations} {
+		if !s.Contains(c) {
 			return false
 		}
 	}
+
 	return true
 }
 
-func (m MarkdownParser) parseTicketEntries(
-	ticketTable ast.Node,
-	file []byte,
-) ([]DailyNoteEntry, error) {
+func findTableEnd(lines []string, start int) int {
+	for l := start; l < len(lines); l++ {
+		if !isTableLine(lines[l]) {
+			return l
+		}
+	}
+	return len(lines)
+}
+
+func getLineEntries(line string) []string {
+	elems := strings.Split(line, "|")
+	entries := []string{}
+
+	for _, e := range elems {
+		e = strings.TrimSpace(e)
+		if len(e) > 0 {
+			entries = append(entries, e)
+		}
+	}
+
+	return entries
+}
+
+func (m MarkdownParser) parseTicketEntries(ticketTable []string) ([]DailyNoteEntry, error) {
+	ticketTable = ticketTable[2:]
 	ticketEntries := []DailyNoteEntry{}
 
-	err := applyOnChildren(ticketTable, "TableRow", func(tableRow ast.Node) error {
-		rowVals := []string{}
-		applyOnChildren(tableRow, "TableCell", func(tableCell ast.Node) error {
-			rowVals = append(rowVals, string(tableCell.Text(file)))
-			return nil
-		})
-		durationSeconds, err := util.CalcDurationSeconds(rowVals[2])
+	for _, l := range ticketTable {
+		entries := getLineEntries(l)
+
+		durationSeconds, err := util.CalcDurationSeconds(entries[2])
+
+		if err != nil {
+			return nil, err
+		}
 
 		if durationSeconds == 0 {
 			// Don't add to ticketEntries if no duration
-			return nil
-		}
-
-		if err != nil {
-			return err
+			continue
 		}
 
 		ticketEntries = append(
 			ticketEntries,
 			DailyNoteEntry{
-				Ticket:          rowVals[0],
-				Comment:         rowVals[1],
+				Ticket:          entries[0],
+				Comment:         entries[1],
 				DurationSeconds: durationSeconds,
 			},
 		)
-		return nil
-	})
-
-	if err != nil {
-		return nil, err
 	}
 
 	return ticketEntries, nil
@@ -119,7 +136,7 @@ func (m MarkdownParser) parseDailyNote(dailyNote []byte) ([]DailyNoteEntry, erro
 		return nil, err
 	}
 
-	ticketEntries, err := m.parseTicketEntries(ticketTable, dailyNote)
+	ticketEntries, err := m.parseTicketEntries(ticketTable)
 
 	if err != nil {
 		return nil, err
