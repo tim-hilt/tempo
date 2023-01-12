@@ -12,6 +12,7 @@ import (
 	"github.com/yuin/goldmark/text"
 )
 
+// TODO: Get rid of goldmark and replace with text-based parser
 func applyOnChildren(parent ast.Node, kind string, fun func(child ast.Node) error) error {
 	child := parent.FirstChild()
 	for child != nil {

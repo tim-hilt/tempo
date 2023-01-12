@@ -121,7 +121,7 @@ func (t *Tempo) watchLoop() error {
 						Msg("submitting file in")
 					debounced(t.submitChanged)
 				} else {
-					log.Trace().Str("file", modifiedFile).Msg("ticket entries equal. not submitting.")
+					log.Trace().Str("file", modifiedFile).Msg("ticket entries equal")
 				}
 			}
 		case err, ok := <-watcher.Errors:
