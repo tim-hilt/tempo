@@ -97,14 +97,47 @@ func getLineEntries(line string) []string {
 	return entries
 }
 
-func (m MarkdownParser) parseTicketEntries(ticketTable []string) ([]DailyNoteEntry, error) {
-	ticketTable = ticketTable[2:]
+type Columns struct {
+	TicketColumn   int
+	CommentColumn  int
+	DurationColumn int
+}
+
+func getColumns(header string) (Columns, error) {
+	headers := getLineEntries(header)
+	cols := config.GetColumns()
+	c := Columns{}
+
+	for i, header := range headers {
+		if header == cols.Tickets {
+			c.TicketColumn = i
+		} else if header == cols.Comments {
+			c.CommentColumn = i
+		} else if header == cols.Durations {
+			c.DurationColumn = i
+		} else {
+			return Columns{}, errors.New("unexpected table-header: " + header)
+		}
+	}
+
+	return c, nil
+}
+
+func (m MarkdownParser) parseTicketEntries(table []string) ([]DailyNoteEntry, error) {
+
+	contentLines := table[2:]
 	ticketEntries := []DailyNoteEntry{}
 
-	for _, l := range ticketTable {
+	c, err := getColumns(table[0])
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, l := range contentLines {
 		entries := getLineEntries(l)
 
-		durationSeconds, err := util.CalcDurationSeconds(entries[2])
+		durationSeconds, err := util.CalcDurationSeconds(entries[c.DurationColumn])
 
 		if err != nil {
 			return nil, err
@@ -118,8 +151,8 @@ func (m MarkdownParser) parseTicketEntries(ticketTable []string) ([]DailyNoteEnt
 		ticketEntries = append(
 			ticketEntries,
 			DailyNoteEntry{
-				Ticket:          entries[0],
-				Comment:         entries[1],
+				Ticket:          entries[c.TicketColumn],
+				Comment:         entries[c.CommentColumn],
 				DurationSeconds: durationSeconds,
 			},
 		)
