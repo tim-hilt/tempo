@@ -85,16 +85,13 @@ func findTableEnd(lines []string, start int) int {
 
 func getLineEntries(line string) []string {
 	elems := strings.Split(line, "|")
-	entries := []string{}
+	elems = elems[1 : len(elems)-1]
 
-	for _, e := range elems {
-		e = strings.TrimSpace(e)
-		if len(e) > 0 {
-			entries = append(entries, e)
-		}
+	for i, e := range elems {
+		elems[i] = strings.TrimSpace(e)
 	}
 
-	return entries
+	return elems
 }
 
 type Columns struct {
