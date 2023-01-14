@@ -140,8 +140,8 @@ func (m MarkdownParser) parseTicketEntries(table []string) ([]DailyNoteEntry, er
 			return nil, err
 		}
 
-		if durationSeconds == 0 {
-			// Don't add to ticketEntries if no duration
+		if durationSeconds == 0 || entries[c.TicketColumn] == "" || entries[c.CommentColumn] == "" {
+			// Don't add to ticketEntries if there are missing fields
 			continue
 		}
 
