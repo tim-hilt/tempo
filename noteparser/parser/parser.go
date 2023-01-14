@@ -18,6 +18,20 @@ type DailyNoteEntry struct {
 	DurationSeconds int
 }
 
+func DailyNoteEntriesEqual(a []DailyNoteEntry, b []DailyNoteEntry) bool {
+	if len(a) != len(b) {
+		return false
+	}
+
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+
+	return true
+}
+
 func GetTickets(p Parser, filePath string) ([]DailyNoteEntry, error) {
 	dailyNote, err := os.ReadFile(filePath)
 

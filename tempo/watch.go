@@ -13,7 +13,6 @@ import (
 
 	"github.com/bep/debounce"
 	"github.com/fsnotify/fsnotify"
-	"github.com/google/go-cmp/cmp"
 	"github.com/rs/zerolog/log"
 	"github.com/tim-hilt/tempo/noteparser"
 	"github.com/tim-hilt/tempo/noteparser/parser"
@@ -110,7 +109,7 @@ func (t *Tempo) watchLoop() error {
 
 				prevTicketEntries := changedFiles[modifiedFile]
 
-				if !cmp.Equal(ticketEntries, prevTicketEntries) {
+				if !parser.DailyNoteEntriesEqual(ticketEntries, prevTicketEntries) {
 					mut.Lock()
 					changedFiles[modifiedFile] = ticketEntries
 					mut.Unlock()

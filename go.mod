@@ -10,7 +10,6 @@ require (
 	github.com/fsnotify/fsnotify v1.6.0
 	github.com/go-playground/validator/v10 v10.11.1
 	github.com/go-resty/resty/v2 v2.7.0
-	github.com/google/go-cmp v0.5.9
 	github.com/rs/zerolog v1.28.0
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/viper v1.13.0
