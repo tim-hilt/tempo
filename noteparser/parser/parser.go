@@ -2,6 +2,7 @@ package parser
 
 import (
 	"os"
+	"time"
 
 	"github.com/rs/zerolog/log"
 )
@@ -33,6 +34,9 @@ func DailyNoteEntriesEqual(a []DailyNoteEntry, b []DailyNoteEntry) bool {
 }
 
 func GetTickets(p Parser, filePath string) ([]DailyNoteEntry, error) {
+	// Some applications (like Obsidian) seem to save the file twice.
+	// This small delay should mitigate this behavior
+	time.Sleep(10 * time.Millisecond)
 	dailyNote, err := os.ReadFile(filePath)
 
 	if err != nil {
