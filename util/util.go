@@ -1,6 +1,7 @@
 package util
 
 import (
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -55,6 +56,16 @@ func SlicesEqual[T comparable](a, b []T) bool {
 
 func CalcDurationSeconds(duration string) (int, error) {
 	if duration == "" {
+		return 0, nil
+	}
+
+	match, err := regexp.MatchString(`^\d{1,2}:\d{2}$`, duration)
+
+	if err != nil {
+		return 0, err
+	}
+
+	if !match {
 		return 0, nil
 	}
 
