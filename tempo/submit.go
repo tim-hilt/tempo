@@ -85,11 +85,15 @@ func (t *Tempo) submitMonth() error {
 }
 
 func (t *Tempo) submit(day string) error {
-	// TODO: Can we get rid of this? Maybe with optional params?
 	ticketEntries, err := noteparser.ParseDailyNote(day)
 
 	if err != nil {
 		return err
+	}
+
+	if len(ticketEntries) == 0 {
+		log.Info().Str("file", day).Msg("no ticket-entries")
+		return nil
 	}
 
 	worklogs, err := t.Api.FindWorklogsInRange(day, day)
