@@ -81,6 +81,12 @@ func (t *Tempo) watchLoop() error {
 
 			if event.Has(fsnotify.Write) && isDailyNote(modifiedFile) {
 
+				if f, _ := os.ReadFile(event.Name); len(f) < 1 {
+					// Some applications (e.g. Obsidian) seem to clear the
+					// file first before they are actually storing it
+					continue
+				}
+
 				log.Trace().Str("dailyNote", modifiedFile).Msg("daily note modification")
 
 				d, err := time.Parse(util.DATE_FORMAT, modifiedFile)
@@ -184,7 +190,4 @@ func (t *Tempo) submitChanged() {
 	}
 
 	wg.Wait()
-
-	// Reset changed files
-	changedFiles = make(map[string][]parser.DailyNoteEntry)
 }
