@@ -21,8 +21,13 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
+type ChangedTickets struct {
+	Tickets   []parser.DailyNoteEntry
+	Submitted bool
+}
+
 var (
-	changedFiles = make(map[string][]parser.DailyNoteEntry)
+	changedFiles = make(map[string]ChangedTickets)
 	watcher      *fsnotify.Watcher
 	mut          sync.Mutex
 )
@@ -80,8 +85,8 @@ func (t *Tempo) watchLoop() error {
 			modifiedFile := strings.TrimSuffix(filepath.Base(event.Name), ".md")
 
 			if event.Has(fsnotify.Write) && isDailyNote(modifiedFile) {
-
-				if f, _ := os.ReadFile(event.Name); len(f) < 1 {
+				f, _ := os.ReadFile(event.Name)
+				if len(f) < 1 {
 					// Some applications (e.g. Obsidian) seem to clear the
 					// file first before they are actually storing it
 					continue
@@ -113,11 +118,15 @@ func (t *Tempo) watchLoop() error {
 					continue
 				}
 
-				prevTicketEntries := changedFiles[modifiedFile]
+				prevTicketEntries := changedFiles[modifiedFile].Tickets
 
-				if !parser.DailyNoteEntriesEqual(ticketEntries, prevTicketEntries) {
+				if !parser.DailyNoteEntriesEqual(ticketEntries, prevTicketEntries) &&
+					!changedFiles[modifiedFile].Submitted {
 					mut.Lock()
-					changedFiles[modifiedFile] = ticketEntries
+					changedFiles[modifiedFile] = ChangedTickets{
+						Tickets:   ticketEntries,
+						Submitted: false,
+					}
 					mut.Unlock()
 
 					log.Trace().
@@ -126,7 +135,7 @@ func (t *Tempo) watchLoop() error {
 						Msg("submitting file in")
 					debounced(t.submitChanged)
 				} else {
-					log.Trace().Str("file", modifiedFile).Msg("ticket entries equal")
+					log.Trace().Str("file", modifiedFile).Int("size", len(f)).Msg("ticket entries equal")
 				}
 			}
 		case err, ok := <-watcher.Errors:
@@ -185,6 +194,8 @@ func (t *Tempo) submitChanged() {
 			log.Info().
 				Str("file", changedFile).
 				Msg("finished creating worklogs")
+			tickets := changedFiles[changedFile].Tickets
+			changedFiles[changedFile] = ChangedTickets{Tickets: tickets, Submitted: true}
 		}()
 
 	}
