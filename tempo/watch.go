@@ -120,8 +120,7 @@ func (t *Tempo) watchLoop() error {
 
 				prevTicketEntries := changedFiles[modifiedFile].Tickets
 
-				if !parser.DailyNoteEntriesEqual(ticketEntries, prevTicketEntries) &&
-					!changedFiles[modifiedFile].Submitted {
+				if !parser.DailyNoteEntriesEqual(ticketEntries, prevTicketEntries) {
 					mut.Lock()
 					changedFiles[modifiedFile] = ChangedTickets{
 						Tickets:   ticketEntries,
@@ -177,7 +176,15 @@ func (t *Tempo) submitChanged() {
 	var wg sync.WaitGroup
 	wg.Add(len(changedFiles))
 
-	for changedFile := range changedFiles {
+	notSubmitted := []string{}
+
+	for k, v := range changedFiles {
+		if !v.Submitted {
+			notSubmitted = append(notSubmitted, k)
+		}
+	}
+
+	for _, changedFile := range notSubmitted {
 		changedFile := changedFile
 		go func() {
 			defer wg.Done()
